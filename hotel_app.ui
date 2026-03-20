@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>704</width>
+    <height>878</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">#centralwidget {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, 
+                      stop:0 #ffffff, stop:1 #dfe4ea);
+}</string>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QStackedWidget" name="stackedWidget">
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background: transparent;</string>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="page_landing">
+       <property name="styleSheet">
+        <string notr="true">background: transparent;</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QFrame" name="landing_frame">
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>300</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">#landing_frame {
+    background-color: rgba(255, 255, 255, 220); /* White with 85% opacity */
+    border-radius: 15px;
+}
+
+QPushButton {
+    background-color: #2c3e50;
+    color: white;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+QPushButton:hover {
+    background-color: #34495e;
+    border: 2px solid #3498db;
+}</string>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item alignment="Qt::AlignHCenter">
+            <widget class="QLabel" name="label">
+             <property name="font">
+              <font>
+               <pointsize>19</pointsize>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>HOTEL RESERVATION SYSTEM</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton">
+             <property name="text">
+              <string>Booking</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_2">
+             <property name="text">
+              <string>Admin Login</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="page_booking">
+       <property name="styleSheet">
+        <string notr="true">QGroupBox {
+    font-size: 14px;
+    font-weight: bold;
+    color: #000000;
+    border: 2px solid #dcdde1;
+    border-radius: 10px;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #ffffff;
+    border: 1px solid #dcdde1;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 15px;
+    padding: 0 5px;
+}
+
+/* Style all Input Fields (LineEdits, Combo Boxes, and DateEdits) */
+QLineEdit, QComboBox, QDateEdit, QSpinBox, QPlainTextEdit {
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #f8f9fa;
+    color: #333;
+    font-size: 13px;
+}
+
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
+    border: 2px solid #3498db; /* Blue glow when typing */
+    background-color: #fff;
+}
+
+/* Style the Labels */
+QLabel {
+    font-size: 13px;
+    color: #34495e;
+    font-weight: normal;
+}
+
+/* The Confirm Button */
+QPushButton#btn_confirm {
+    background-color: #27ae60;
+    color: white;
+    border-radius: 6px;
+    font-weight: bold;
+	min-height: 35px;
+}
+
+/* THE HOVER - Make sure there is NO space between the name and the colon */
+QPushButton#btn_confirm:hover {
+    background-color: #2ecc71; /* A lighter green */
+}
+
+/* The Back Button */
+QPushButton#btn_back {
+    background-color: rgba(255, 255, 255, 0.2); 
+    color: #c0392b;
+    border: 1px solid #c0392b;
+    border-radius: 6px;
+	min-height: 35px;
+}
+
+QPushButton#btn_back:hover {
+    background-color: #c0392b;
+    color: white;
+}</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <property name="leftMargin">
+         <number>100</number>
+        </property>
+        <property name="topMargin">
+         <number>50</number>
+        </property>
+        <property name="rightMargin">
+         <number>100</number>
+        </property>
+        <property name="bottomMargin">
+         <number>50</number>
+        </property>
+        <item row="5" column="0">
+         <widget class="QPushButton" name="btn_back">
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Back to Home</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>Guest Details</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Full Name</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="input_name"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Contact No.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="input_phone"/>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Email</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="input_email"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="btn_confirm">
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Confirm Booking</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QGroupBox" name="groupBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>Preferences</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout_3">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Number Of Guests</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="spin_guests"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>Payment Method</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="combo_payment">
+             <item>
+              <property name="text">
+               <string>--Select Payment Method--</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Cash at Check-in</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Credit Card</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Debit Card</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>Special Requests</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QPlainTextEdit" name="txt_requests"/>
+           </item>
+           <item row="3" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>Stay Details</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout_2">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Room Type</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="combo_room_type">
+             <item>
+              <property name="text">
+               <string>Standard - $100</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Deluxe - $250</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Suite - $500</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Check-in Date</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDateEdit" name="date_checkin"/>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Check-out Date</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QDateEdit" name="date_checkout"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="page_admin">
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">/* Background of the Admin Page */
+QWidget#page_admin {
+    background-color: #f4f7f6;
+}
+
+/* Table Design */
+QTableWidget {
+    background-color: white;
+    border: 1px solid #dcdfe3;
+    gridline-color: #f0f0f0;
+    border-radius: 5px;
+}
+
+QHeaderView::section {
+    background-color: #34495e;
+    color: white;
+    padding: 6px;
+    font-weight: bold;
+    border: none;
+}
+
+/* Common Button Settings */
+QPushButton {
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* --- REFRESH BUTTON (Green) --- */
+QPushButton#btn_refresh {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+}
+QPushButton#btn_refresh:hover {
+    background-color: #2ecc71;
+}
+
+/* --- DELETE BUTTON (Red) --- */
+QPushButton#btn_delete {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+}
+QPushButton#btn_delete:hover {
+    background-color: #ff5e4d;
+}
+
+/* --- LOGOUT BUTTON (Dark Grey/Professional) --- */
+QPushButton#btn_logout {
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+}
+QPushButton#btn_logout:hover {
+    background-color: #7f8c8d;
+}
+
+/* Search Bar Styling */
+QLineEdit {
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: white;
+}
+
+/* Table Header Styling */
+QHeaderView::section {
+    background-color: #1a1a1a; /* Matches your Black title vibe */
+    color: white;
+    padding: 8px;
+    font-weight: bold;
+    border: none;
+    border-right: 1px solid #333; /* Subtle divider */
+}
+
+/* Make the Total Bill column bold */
+QTableWidget::item {
+    padding: 5px;
+}
+
+/* Highlight the last column (Total Bill) */
+QTableWidget::item:last-child {
+    font-weight: bold;
+    color: #27ae60; /* Money green */
+}
+
+/* LOGOUT BUTTON (Normal) */
+QPushButton#btn_logout {
+    background-color: #7f8c8d; /* Professional Slate Grey */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 15px;
+    font-weight: bold;
+}
+
+/* LOGOUT BUTTON (Hover) */
+QPushButton#btn_logout:hover {
+    background-color: #95a5a6; /* Lighter grey so it &quot;lights up&quot; */
+}
+
+/* LOGOUT BUTTON (Pressed) */
+QPushButton#btn_logout:pressed {
+    background-color: #2c3e50; /* Deep blue-grey when clicked */
+}</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="spacing">
+         <number>15</number>
+        </property>
+        <property name="leftMargin">
+         <number>20</number>
+        </property>
+        <property name="topMargin">
+         <number>20</number>
+        </property>
+        <property name="rightMargin">
+         <number>20</number>
+        </property>
+        <property name="bottomMargin">
+         <number>20</number>
+        </property>
+        <item>
+         <widget class="QFrame" name="header_frame">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLineEdit" name="input_search">
+             <property name="minimumSize">
+              <size>
+               <width>300</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="placeholderText">
+              <string>Search by Guest Name or ID</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="lbl_admin_title">
+             <property name="styleSheet">
+              <string notr="true">/* --- ADMIN DASHBOARD TITLE --- */
+QLabel#lbl_admin_title {
+    color: #2c3e50;           /* Dark professional blue-grey */
+    font-size: 24px;          /* Large enough to be a heading */
+    font-weight: bold;        /* Makes it pop */
+    font-family: &quot;Segoe UI&quot;, sans-serif; /* Clean modern font */
+    padding: 10px;            /* Gives it some space */
+}</string>
+             </property>
+             <property name="text">
+              <string>Admin Dashboard</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btn_logout">
+             <property name="text">
+              <string>Logout</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="table_records">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectItems</enum>
+          </property>
+          <property name="showGrid">
+           <bool>false</bool>
+          </property>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Guest Name</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Room Type</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Guests</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Check-in</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Nights</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Status</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Total Bill</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="footer_frame">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btn_refresh">
+             <property name="styleSheet">
+              <string notr="true">/* --- REFRESH BUTTON (Normal State - Green) --- */
+QPushButton#btn_refresh {
+    background-color: #27ae60; /* Emerald Green */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+
+/* REFRESH BUTTON (Hover State - Lighter Green) */
+QPushButton#btn_refresh:hover {
+    background-color: #2ecc71; /* Brighter Green */
+}
+
+/* REFRESH BUTTON (Pressed State - Darker Green) */
+QPushButton#btn_refresh:pressed {
+    background-color: #1e8449;
+}</string>
+             </property>
+             <property name="text">
+              <string>Refresh</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btn_delete">
+             <property name="styleSheet">
+              <string notr="true">/* This is the normal state you already have */
+QPushButton#btn_delete {
+    background-color: #e74c3c; 
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+
+/* --- ADD THIS PART FOR THE HOVER --- */
+QPushButton#btn_delete:hover {
+    background-color: #c0392b; /* A slightly darker red */
+}
+
+/* Optional: This makes it even darker when you actually CLICK it */
+QPushButton#btn_delete:pressed {
+    background-color: #a93226;
+}</string>
+             </property>
+             <property name="text">
+              <string>Delete</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>704</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>
