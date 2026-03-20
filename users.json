@@ -7,7 +7,14 @@
       "role": "admin",
       "name": "Hotel Admin",
       "phone": "09000000000"
+    },
+    {
+      "username": "mark",
+      "email": "mark@test.com",
+      "password": "Mark@123",
+      "role": "customer",
+      "name": "Mark Julius",
+      "phone": "09081515313"
     }
   ]
 }
-
