@@ -1,0 +1,13 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@hotel.com",
+      "password": "Admin@123",
+      "role": "admin",
+      "name": "Hotel Admin",
+      "phone": "09000000000"
+    }
+  ]
+}
+
