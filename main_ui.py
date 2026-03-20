@@ -1,11 +1,14 @@
+import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import QDate
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(704, 878)
-MainWindow.setStyleSheet("")
+        MainWindow.setStyleSheet("")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setAutoFillBackground(False)
         self.centralwidget.setStyleSheet("#centralwidget {\n"
@@ -60,9 +63,6 @@ MainWindow.setStyleSheet("")
         self.pushButton = QtWidgets.QPushButton(self.landing_frame)
         self.pushButton.setObjectName("pushButton")
         self.verticalLayout.addWidget(self.pushButton)
-        self.pushButton_2 = QtWidgets.QPushButton(self.landing_frame)
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.verticalLayout.addWidget(self.pushButton_2)
         self.gridLayout_2.addWidget(self.landing_frame, 0, 0, 1, 1)
         self.stackedWidget.addWidget(self.page_landing)
         self.page_booking = QtWidgets.QWidget()
@@ -477,6 +477,7 @@ MainWindow.setStyleSheet("")
         self.stackedWidget.addWidget(self.page_admin)
         self.verticalLayout_2.addWidget(self.stackedWidget)
         MainWindow.setCentralWidget(self.centralwidget)
+        
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 704, 22))
         self.menubar.setObjectName("menubar")
@@ -492,9 +493,8 @@ MainWindow.setStyleSheet("")
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.label.setText(_translate("MainWindow", "HOTEL RESERVATION SYSTEM"))
-        self.pushButton.setText(_translate("MainWindow", "Booking"))
-        self.pushButton_2.setText(_translate("MainWindow", "Admin Login"))
+        self.label.setText(_translate("MainWindow", "Welcome to Hotel Reservation System"))
+        self.pushButton.setText(_translate("MainWindow", "🔐 Login"))
         self.btn_back.setText(_translate("MainWindow", "Back to Home"))
         self.groupBox_3.setTitle(_translate("MainWindow", "Guest Details"))
         self.label_2.setText(_translate("MainWindow", "Full Name"))
@@ -537,4 +537,154 @@ MainWindow.setStyleSheet("")
         item.setText(_translate("MainWindow", "Total Bill"))
         self.btn_refresh.setText(_translate("MainWindow", "Refresh"))
         self.btn_delete.setText(_translate("MainWindow", "Delete"))
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        
+        # Stub data for bookings
+        self.bookings = []
+        self.next_id = 1
+        
+        # Connect signals
+        self.connect_signals()
+        
+        # Start on landing page
+        self.ui.stackedWidget.setCurrentIndex(0)
+
+    def connect_signals(self):
+        """Connect UI buttons to methods"""
+        self.ui.pushButton.clicked.connect(self.show_login_dialog)
+        self.ui.btn_back.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(0))
+        self.ui.btn_confirm.clicked.connect(self.confirm_booking)
+        self.ui.btn_refresh.clicked.connect(self.load_records)
+        self.ui.btn_delete.clicked.connect(self.delete_record)
+        self.ui.input_search.textChanged.connect(self.filter_records)
+        self.ui.btn_logout.clicked.connect(self.show_landing)
+
+    def show_login_dialog(self):
+        """Placeholder for login (TODO: integrate auth)"""
+        print("Login clicked - TODO: show login dialog")
+        self.ui.stackedWidget.setCurrentIndex(1)  # Go to booking for demo
+
+    def show_register_dialog(self):
+        """Placeholder for register"""
+        print("Register clicked - TODO: show register dialog")
+
+    def show_landing(self):
+        """Show landing page"""
+        self.ui.stackedWidget.setCurrentIndex(0)
+
+    def confirm_booking(self):
+        """Handle booking confirmation"""
+        # Get form data
+        name = self.ui.input_name.text()
+        phone = self.ui.input_phone.text()
+        email = self.ui.input_email.text()
+        room_type = self.ui.combo_room_type.currentText()
+        guests = self.ui.spin_guests.value()
+        checkin = self.ui.date_checkin.date().toString("yyyy-MM-dd")
+        checkout = self.ui.date_checkout.date().toString("yyyy-MM-dd")
+        payment = self.ui.combo_payment.currentText()
+        requests = self.ui.txt_requests.toPlainText()
+
+        if not name or not phone or not room_type:
+            print("Please fill required fields")
+            return
+
+        # Calculate nights and price
+        nights = (self.ui.date_checkout.date() - self.ui.date_checkin.date()).days()
+        if "Standard" in room_type:
+            price_per_night = 100
+        elif "Deluxe" in room_type:
+            price_per_night = 250
+        else:
+            price_per_night = 500
+        total = nights * price_per_night * guests
+
+        booking = {
+            "id": self.next_id,
+            "name": name,
+            "phone": phone,
+            "email": email,
+            "room_type": room_type,
+            "guests": guests,
+            "checkin": checkin,
+            "nights": nights,
+            "status": "Confirmed",
+            "total": f"${total:.2f}"
+        }
+        self.bookings.append(booking)
+        self.next_id += 1
+
+        print(f"Booking confirmed: {booking}")
+        self.clear_booking_form()
+        self.ui.stackedWidget.setCurrentIndex(2)  # Show admin to see booking
+        self.load_records()
+
+    def clear_booking_form(self):
+        """Clear booking form"""
+        self.ui.input_name.clear()
+        self.ui.input_phone.clear()
+        self.ui.input_email.clear()
+        self.ui.combo_room_type.setCurrentIndex(0)
+        self.ui.spin_guests.setValue(1)
+        self.ui.date_checkin.setDate(QDate.currentDate())
+        self.ui.date_checkout.setDate(QDate.currentDate().addDays(1))
+        self.ui.combo_payment.setCurrentIndex(0)
+        self.ui.txt_requests.clear()
+
+    def load_records(self):
+        """Load bookings into table"""
+        self.ui.table_records.setRowCount(0)
+        for booking in self.bookings:
+            row = self.ui.table_records.rowCount()
+            self.ui.table_records.insertRow(row)
+            self.ui.table_records.setItem(row, 0, QtWidgets.QTableWidgetItem(str(booking["id"])))
+            self.ui.table_records.setItem(row, 1, QtWidgets.QTableWidgetItem(booking["name"]))
+            self.ui.table_records.setItem(row, 2, QtWidgets.QTableWidgetItem(booking["room_type"]))
+            self.ui.table_records.setItem(row, 3, QtWidgets.QTableWidgetItem(str(booking["guests"])))
+            self.ui.table_records.setItem(row, 4, QtWidgets.QTableWidgetItem(booking["checkin"]))
+            self.ui.table_records.setItem(row, 5, QtWidgets.QTableWidgetItem(str(booking["nights"])))
+            self.ui.table_records.setItem(row, 6, QtWidgets.QTableWidgetItem(booking["status"]))
+            self.ui.table_records.setItem(row, 7, QtWidgets.QTableWidgetItem(booking["total"]))
+
+    def delete_record(self):
+        """Delete selected record"""
+        selection = self.ui.table_records.selectedItems()
+        if selection:
+            row = selection[0].row()
+            booking_id = int(self.ui.table_records.item(row, 0).text())
+            self.bookings = [b for b in self.bookings if b["id"] != booking_id]
+            self.ui.table_records.removeRow(row)
+            print(f"Deleted booking {booking_id}")
+
+    def filter_records(self):
+        """Filter table by search"""
+        search = self.ui.input_search.text().lower()
+        for row in range(self.ui.table_records.rowCount()):
+            match = False
+            for col in range(self.ui.table_records.columnCount()):
+                item = self.ui.table_records.item(row, col)
+                if item and search in item.text().lower():
+                    match = True
+                    break
+            self.ui.table_records.setRowHidden(row, not match)
+
+def show_page_booking(self):
+    self.ui.stackedWidget.setCurrentIndex(1)
+
+def show_page_admin(self):
+    self.ui.stackedWidget.setCurrentIndex(2)
+    self.load_records()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
+
 # import resources_rc  # Commented out since no resources.qrc exists
+

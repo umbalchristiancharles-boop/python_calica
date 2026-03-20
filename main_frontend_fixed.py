@@ -35,15 +35,12 @@ class FrontendApp(HotelUI):
         self.auth_handler = AuthHandler()
         self.current_user: Optional[Dict[str, str]] = None
         
-        # Landing page connects
+        # Landing page connects - Guest booking removed
         try:
-            self.ui.pushButton_booking.clicked.connect(
-                lambda: self.ui.stackedWidget.setCurrentIndex(2)
-            )
-            print("Landing connects OK")
             self.ui.pushButton_auth.clicked.connect(self.show_auth_page)
+            print("Auth landing connect OK")
         except AttributeError as e:
-            print(f"Landing connects skipped: {e}")
+            print(f"Landing connect skipped: {e}")
         
         # Other connects with safety
         self._connect_buttons()
