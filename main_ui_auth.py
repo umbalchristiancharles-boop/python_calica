@@ -215,12 +215,14 @@ class Ui_MainWindow(object):
         self.page_booking = QtWidgets.QWidget()
         self.page_booking.setObjectName("page_booking")
         layout = QtWidgets.QGridLayout(self.page_booking)
-        layout.setSpacing(15)
+        layout.setSpacing(18)
         
         # Form left
         form_frame = QtWidgets.QFrame()
         form_layout = QtWidgets.QFormLayout(form_frame)
-        form_layout.setSpacing(10)
+        form_layout.setHorizontalSpacing(24)
+        form_layout.setVerticalSpacing(12)
+        form_layout.setLabelAlignment(QtCore.Qt.AlignRight)
         
         self.input_name = QtWidgets.QLineEdit(placeholderText="Guest name")
         self.input_name.setObjectName("input_name")
@@ -269,6 +271,14 @@ class Ui_MainWindow(object):
         self.btn_confirm.setObjectName("btn_confirm")
         self.btn_confirm.setStyleSheet("background: #27ae60; color: white; font-size: 16px; padding: 12px;")
         form_layout.addRow(self.btn_confirm)
+
+        # Slightly larger fonts for readability in the form
+        try:
+            font = QtGui.QFont()
+            font.setPointSize(10)
+            form_frame.setFont(font)
+        except Exception:
+            pass
         
         layout.addWidget(form_frame, 0, 0)
         
@@ -288,6 +298,19 @@ class Ui_MainWindow(object):
         self.table_records.setColumnCount(8)
         self.table_records.setHorizontalHeaderLabels(["ID", "Name", "Room", "Guests", "Check-in", "Nights", "Status", "Total"])
         self.table_records.setObjectName("table_records")
+        # Improve table readability and selection
+        try:
+            self.table_records.setAlternatingRowColors(True)
+            self.table_records.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+            self.table_records.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            # Slightly larger table font
+            tbl_font = QtGui.QFont()
+            tbl_font.setPointSize(10)
+            self.table_records.setFont(tbl_font)
+            # Visual highlight for selection
+            self.table_records.setStyleSheet("QTableWidget::item:selected{background: #cfeffd;}")
+        except Exception:
+            pass
         table_layout.addWidget(self.table_records)
         
         self.btn_delete = QtWidgets.QPushButton("❌ Cancel Selected")

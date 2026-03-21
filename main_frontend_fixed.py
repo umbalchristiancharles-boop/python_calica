@@ -3,7 +3,7 @@ import os
 from typing import Optional, Dict, Any, List
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, 
                              QInputDialog, QLineEdit)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 import pymysql
 from datetime import date, timedelta
 import datetime
@@ -54,6 +54,15 @@ class FrontendApp(HotelUI):
         except AttributeError:
             pass
 
+        # Auto-refresh timer: refresh bookings table periodically when relevant page is active
+        try:
+            self.auto_refresh_timer = QTimer(self)
+            self.auto_refresh_timer.setInterval(5000)  # 5 seconds
+            self.auto_refresh_timer.timeout.connect(self._auto_refresh_tick)
+            self.auto_refresh_timer.start()
+        except Exception:
+            pass
+
     def _connect_buttons(self) -> None:
         """Connect all UI buttons safely."""
         connects = [
@@ -86,6 +95,11 @@ class FrontendApp(HotelUI):
             pass
         try:
             self.ui.table_records_admin.itemSelectionChanged.connect(self.update_action_buttons)
+        except Exception:
+            pass
+        # Double click shows booking details (customer panel)
+        try:
+            self.ui.table_records.itemDoubleClicked.connect(self.show_booking_details)
         except Exception:
             pass
         # No client-side approve button; admin approvals handled server-side
@@ -152,6 +166,16 @@ class FrontendApp(HotelUI):
             self.update_room_availability(py_date)
         except Exception as e:
             print(f"Date change error: {e}")
+
+    def _auto_refresh_tick(self):
+        """Called by QTimer periodically; refresh table only when booking/admin pages are visible."""
+        try:
+            current_page = self.ui.stackedWidget.currentIndex()
+            # customer page is 2, admin is 3
+            if current_page in (2, 3):
+                self.refresh_table()
+        except Exception:
+            pass
 
     def load_bookings(self, user_filter=None) -> list:
         """Load bookings from DB."""
@@ -322,6 +346,21 @@ class FrontendApp(HotelUI):
                      f"${float(b.get('total_bill', 0)):.2f}"]
             for col, val in enumerate(cols):
                 table.setItem(row, col, QTableWidgetItem(str(val)))
+            # Color the Status cell as a small badge (background color)
+            try:
+                status_text = (b.get('status') or '').strip()
+                status_item = table.item(row, 6)  # Status column index
+                if status_item:
+                    if status_text.lower().startswith('cancel'):
+                        status_item.setBackground(QtGui.QColor('#f1948a'))
+                    elif status_text.lower().startswith('cancellation requested') or status_text.lower().startswith('cancellation requested'):
+                        status_item.setBackground(QtGui.QColor('#f7dc6f'))
+                    elif status_text.lower().startswith('confirmed'):
+                        status_item.setBackground(QtGui.QColor('#abebc6'))
+                    else:
+                        status_item.setBackground(QtGui.QColor('#d5dbdb'))
+            except Exception:
+                pass
             table.resizeColumnsToContents()
 
     # Placeholder for missing methods - expand with original full implementations
@@ -336,6 +375,20 @@ class FrontendApp(HotelUI):
         
         row = selection[0].row()
         booking_id = int(table.item(row, 0).text())
+        # Safety: check current status to prevent duplicate cancels
+        conn_check, cursor_check = self.get_db_connection()
+        if not conn_check:
+            return QMessageBox.warning(self, "DB Error", "Cannot connect to database.")
+        try:
+            cursor_check.execute("SELECT status FROM bookings WHERE id = %s", (booking_id,))
+            row_check = cursor_check.fetchone()
+            current_status = row_check.get('status') if row_check else None
+        finally:
+            conn_check.close()
+
+        if current_status in ('Cancelled', 'Cancellation Requested', 'Cancellation Approved'):
+            return QMessageBox.warning(self, "Already Processed", f"Booking {booking_id} has status '{current_status}' and cannot be cancelled again.")
+
         reply = QMessageBox.question(self, 'Confirm Cancel', f'Cancel booking ID {booking_id}?\nThis will mark it as Cancelled.',
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
@@ -431,9 +484,13 @@ class FrontendApp(HotelUI):
 
             # For customer view: enable only if logged in and owner
             is_owner = self.logged_in and self.current_user and owner_id == self.current_user.get('id')
+            # Do not allow cancelling/re-requesting if already processed or pending
+            processed_statuses = ['Cancelled', 'Cancellation Approved', 'Checked-in', 'Checked-out', 'Confirmed']
+            is_pending = status == 'Cancellation Requested'
+            can_cancel = is_owner and (status not in processed_statuses) and (not is_pending)
             try:
                 if getattr(self.ui, 'btn_delete', None):
-                    self.ui.btn_delete.setEnabled(is_owner)
+                    self.ui.btn_delete.setEnabled(can_cancel)
                 if getattr(self.ui, 'btn_rebook', None):
                     self.ui.btn_rebook.setEnabled(is_owner)
             except Exception:
@@ -515,6 +572,72 @@ class FrontendApp(HotelUI):
                 QMessageBox.information(self, "Prefilled", "Form prefilled with old data. Update dates/room and confirm to rebook.")
             else:
                 QMessageBox.warning(self, "Rebook Cancelled", "Reason required.")
+
+    def show_booking_details(self, item):
+        """Show booking details in the form when a row is double-clicked (customer panel)."""
+        try:
+            row = item.row()
+            table = self.ui.table_records
+            booking_id = int(table.item(row, 0).text())
+        except Exception:
+            return
+
+        conn, cursor = self.get_db_connection()
+        if not conn:
+            return
+        try:
+            cursor.execute("SELECT * FROM bookings WHERE id = %s", (booking_id,))
+            booking = cursor.fetchone()
+        except Exception:
+            booking = None
+        finally:
+            conn.close()
+
+        if not booking:
+            return QMessageBox.warning(self, "Error", "Booking not found.")
+
+        # Populate form fields for quick view/edit (do not change ownership)
+        try:
+            self.ui.input_name.setText(booking.get('name',''))
+            if hasattr(self.ui, 'input_phone'):
+                self.ui.input_phone.setText(booking.get('phone','') or '')
+            if hasattr(self.ui, 'input_email'):
+                self.ui.input_email.setText(booking.get('email','') or '')
+            # Parse and set dates safely
+            def _parse_booking_date(val):
+                try:
+                    if isinstance(val, str):
+                        return date.fromisoformat(val)
+                    if isinstance(val, datetime.datetime):
+                        return val.date()
+                    if isinstance(val, date):
+                        return val
+                except Exception:
+                    pass
+                try:
+                    return date.fromisoformat(str(val))
+                except Exception:
+                    return date.today()
+
+            checkin_dt = _parse_booking_date(booking.get('checkin'))
+            checkout_dt = _parse_booking_date(booking.get('checkout'))
+            try:
+                self.ui.date_checkin.setDate(checkin_dt)
+                self.ui.date_checkout.setDate(checkout_dt)
+            except Exception:
+                pass
+            # Scroll to booking on the table and ensure selection
+            try:
+                self.ui.table_records.selectRow(row)
+            except Exception:
+                pass
+            # Switch to booking form page if not already
+            try:
+                self.ui.stackedWidget.setCurrentIndex(2)
+            except Exception:
+                pass
+        except Exception:
+            pass
 
     def approve_selected_cancellation(self):
         # Approve action removed from UI. Server-side approval remains.
