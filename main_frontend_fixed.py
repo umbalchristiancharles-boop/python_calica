@@ -42,6 +42,24 @@ class FrontendApp(HotelUI):
             print("Auth landing connect OK")
         except AttributeError as e:
             print(f"Landing connect skipped: {e}")
+        # Enhance landing button interactivity and appearance at runtime
+        try:
+            btn = getattr(self.ui, 'pushButton_auth', None)
+            if btn:
+                btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+                # stronger padding + size for accessibility
+                btn.setStyleSheet(btn.styleSheet() + "\nQPushButton#pushButton_auth { padding: 16px 36px; font-size: 16px; font-weight: 600; }")
+                # subtle drop shadow effect (QSS doesn't support shadow reliably)
+                try:
+                    shadow = QtWidgets.QGraphicsDropShadowEffect(self)
+                    shadow.setBlurRadius(18)
+                    shadow.setOffset(0, 6)
+                    shadow.setColor(QtGui.QColor(0, 0, 0, 80))
+                    btn.setGraphicsEffect(shadow)
+                except Exception:
+                    pass
+        except Exception:
+            pass
         
         # Other connects
         self._connect_buttons()
@@ -62,6 +80,12 @@ class FrontendApp(HotelUI):
             self.auto_refresh_timer.start()
         except Exception:
             pass
+
+        # Ensure DB schema has expected columns (self-healing migration)
+        try:
+            self.ensure_booking_columns()
+        except Exception as e:
+            print(f"Schema migration check failed: {e}")
 
     def _connect_buttons(self) -> None:
         """Connect all UI buttons safely."""
@@ -88,6 +112,7 @@ class FrontendApp(HotelUI):
                 signal.connect(slot)
             except AttributeError:
                 print(f"Connect skipped: {signal}")
+        # No approve button to connect (removed from UI)
         # Connect selection change to update action buttons when tables exist
         try:
             self.ui.table_records.itemSelectionChanged.connect(self.update_action_buttons)
@@ -112,6 +137,44 @@ class FrontendApp(HotelUI):
         except Exception as e:
             QMessageBox.critical(self, "DB Error", f"Connection failed: {e}\nStart XAMPP MySQL & run hotel_db.sql")
             return None, None
+
+    def ensure_booking_columns(self):
+        """Ensure `rebooked_from_id` and `rebooking_reason` columns exist on `bookings` table; add if missing."""
+        conn, cursor = self.get_db_connection()
+        if not conn:
+            return
+        try:
+            # Check and add rebooked_from_id
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = %s AND TABLE_NAME = 'bookings' AND COLUMN_NAME = 'rebooked_from_id'
+            """, (self.db_config.get('db'),))
+            row = cursor.fetchone()
+            if row and row.get('cnt', 0) == 0:
+                try:
+                    cursor.execute("ALTER TABLE bookings ADD COLUMN rebooked_from_id INT NULL")
+                except Exception:
+                    pass
+                try:
+                    cursor.execute("ALTER TABLE bookings ADD CONSTRAINT fk_rebooked_from FOREIGN KEY (rebooked_from_id) REFERENCES bookings(id) ON DELETE SET NULL")
+                except Exception:
+                    pass
+                print("Added missing column rebooked_from_id to bookings table.")
+
+            # Check and add rebooking_reason
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = %s AND TABLE_NAME = 'bookings' AND COLUMN_NAME = 'rebooking_reason'
+            """, (self.db_config.get('db'),))
+            row2 = cursor.fetchone()
+            if row2 and row2.get('cnt', 0) == 0:
+                try:
+                    cursor.execute("ALTER TABLE bookings ADD COLUMN rebooking_reason TEXT NULL")
+                    print("Added missing column rebooking_reason to bookings table.")
+                except Exception:
+                    pass
+        finally:
+            conn.close()
 
     def check_room_availability(self, date_str: str, room_type_id: int) -> bool:
         """Check if room_type_id is available on given date (no overlapping bookings)."""
@@ -339,6 +402,15 @@ class FrontendApp(HotelUI):
             except Exception:
                 status_display = status
 
+            # For admin view, make cancellation requests explicit with requesting username
+            try:
+                if is_admin and status == 'Cancellation Requested':
+                    user_tag = b.get('username') or b.get('user_name') or ''
+                    user_part = f" by {user_tag}" if user_tag else ''
+                    status_display = f"Cancellation Requested{user_part}\n({b.get('cancellation_reason','')[:40]}...)"
+            except Exception:
+                pass
+
             cols += [b.get('room_type_display', b.get('room_type', '')),
                      str(b.get('guests', '')), str(b.get('checkin', '')),
                      str(b.get('nights', '')), 
@@ -466,14 +538,17 @@ class FrontendApp(HotelUI):
             try:
                 cursor.execute("SELECT user_id, status FROM bookings WHERE id = %s", (booking_id,))
                 row = cursor.fetchone()
+                row = cursor.fetchone()
                 owner_id = row.get('user_id') if row else None
                 status = row.get('status') if row else None
+                print(f"update_action_buttons: booking_id={booking_id} db_row_exists={bool(row)} status={status}")
             finally:
                 conn.close()
 
-            # Admin view: keep admin-only buttons disabled by default (no approve button)
+            # Admin view: enable approve button only when a cancellation request is selected
             if is_admin:
                 try:
+                    # Default disable admin action buttons
                     if getattr(self.ui, 'btn_delete_admin', None):
                         self.ui.btn_delete_admin.setEnabled(False)
                     if getattr(self.ui, 'btn_rebook_admin', None):
@@ -485,7 +560,8 @@ class FrontendApp(HotelUI):
             # For customer view: enable only if logged in and owner
             is_owner = self.logged_in and self.current_user and owner_id == self.current_user.get('id')
             # Do not allow cancelling/re-requesting if already processed or pending
-            processed_statuses = ['Cancelled', 'Cancellation Approved', 'Checked-in', 'Checked-out', 'Confirmed']
+            # 'Confirmed' should be cancellable by customers (it means active booking)
+            processed_statuses = ['Cancelled', 'Cancellation Approved', 'Checked-in', 'Checked-out']
             is_pending = status == 'Cancellation Requested'
             can_cancel = is_owner and (status not in processed_statuses) and (not is_pending)
             try:
@@ -640,8 +716,48 @@ class FrontendApp(HotelUI):
             pass
 
     def approve_selected_cancellation(self):
-        # Approve action removed from UI. Server-side approval remains.
-        QMessageBox.information(self, "Not Available", "Approve Cancellation action has been removed from the UI.")
+        print("approve_selected_cancellation called")
+        # Approve the selected cancellation request (admin action)
+        current_page = self.ui.stackedWidget.currentIndex()
+        if current_page != 3:
+            return QMessageBox.warning(self, "Not Admin", "Approve action is only available in Admin view.")
+        table = self.ui.table_records_admin
+        selection = table.selectedItems()
+        if not selection:
+            return QMessageBox.warning(self, "No Selection", "Select a booking row first.")
+        row = selection[0].row()
+        try:
+            booking_id = int(table.item(row, 0).text())
+        except Exception:
+            return QMessageBox.warning(self, "Error", "Unable to determine booking ID.")
+
+        conn, cursor = self.get_db_connection()
+        if not conn:
+            return QMessageBox.critical(self, "DB Error", "Cannot connect to database.")
+        try:
+            cursor.execute("SELECT status, cancellation_reason FROM bookings WHERE id = %s", (booking_id,))
+            rowdata = cursor.fetchone()
+            rowdata = cursor.fetchone()
+            status = rowdata.get('status') if rowdata else None
+            reason = rowdata.get('cancellation_reason') if rowdata else ''
+            print(f"approve_selected_cancellation: booking_id={booking_id} db_row_exists={bool(rowdata)} status={status}")
+            if status != 'Cancellation Requested':
+                return QMessageBox.information(self, "Not Pending", f"Booking {booking_id} is not a cancellation request (status: {status}).")
+
+            reply = QMessageBox.question(self, 'Approve Cancellation', f'Approve cancellation for booking {booking_id}?', QMessageBox.Yes | QMessageBox.No)
+            if reply != QMessageBox.Yes:
+                return
+
+            # Mark as Cancelled and keep reason
+            try:
+                cursor.execute("UPDATE bookings SET status = 'Cancelled' WHERE id = %s", (booking_id,))
+            except Exception as e:
+                QMessageBox.critical(self, "DB Error", f"Failed to update booking: {e}")
+                return
+            self.refresh_table()
+            QMessageBox.information(self, "Approved", f"Cancellation for booking {booking_id} approved.")
+        finally:
+            conn.close()
     
     def on_search_changed(self, text):
         """Search change - page aware."""

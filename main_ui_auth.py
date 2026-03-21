@@ -43,59 +43,30 @@ class Ui_MainWindow(object):
         title.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(title)
         
-        frame = QtWidgets.QFrame()
-        frame.setFixedSize(400, 250)
-        frame.setStyleSheet("""
-            #frame { background: rgba(255,255,255,0.95); border-radius: 20px; 
-            border: 3px solid #3498db; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
-        """)
-        frame.setObjectName("frame")
-        frame_layout = QtWidgets.QVBoxLayout(frame)
-        frame_layout.setSpacing(20)
-        frame_layout.setContentsMargins(40, 40, 40, 40)
-        
-        # Clear, readable booking button with tooltip and accessibility name
-        self.pushButton_booking = QtWidgets.QPushButton("📅  Quick Booking (Guest)")
-        self.pushButton_booking.setObjectName("pushButton_booking")
-        font = QtGui.QFont("Segoe UI", 15)
-        font.setBold(True)
-        self.pushButton_booking.setFont(font)
-        # Strong contrast gradient and light border for readability
-        self.pushButton_booking.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 #2b80d9, stop:1 #1b6fb3);
-                color: #ffffff;
-                border: 2px solid rgba(255,255,255,0.18);
-                border-radius: 12px;
-                padding: 14px 20px;
-                font-size: 15px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 #1f6fb3, stop:1 #265d9a);
-            }
-        """)
-        self.pushButton_booking.setMinimumHeight(64)
-        self.pushButton_booking.setMinimumWidth(320)
-        self.pushButton_booking.setCursor(QtCore.Qt.PointingHandCursor)
-        self.pushButton_booking.setToolTip("Quick booking as guest — no account required")
-        self.pushButton_booking.setAccessibleName("QuickBookingButton")
-        self.pushButton_booking.setAutoDefault(False)
-        frame_layout.addWidget(self.pushButton_booking, alignment=QtCore.Qt.AlignCenter)
-        
+        # Place the Login/Register button directly on the landing background
         self.pushButton_auth = QtWidgets.QPushButton("🔐 Login / Register")
         self.pushButton_auth.setObjectName("pushButton_auth")
+        self.pushButton_auth.setProperty('class', 'primary')
         self.pushButton_auth.setFont(QtGui.QFont("Segoe UI", 14))
-        self.pushButton_auth.setStyleSheet("""
-            QPushButton { background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #f39c12, stop:1 #e67e22);
-                        color: #ffffff; border-radius: 12px; padding: 15px; }
-            QPushButton:hover { background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #e67e22, stop:1 #f39c12); }
-        """)
-        self.pushButton_auth.setMinimumHeight(60)
-        self.pushButton_auth.setMinimumWidth(300)
+        # Use the primary class defined in main UI stylesheet (Instagram-like gradient)
+        self.pushButton_auth.setStyleSheet("QPushButton.primary { min-width: 360px; min-height: 64px; border-radius: 14px; }")
+        self.pushButton_auth.setMinimumHeight(64)
+        self.pushButton_auth.setMinimumWidth(360)
+        self.pushButton_auth.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.pushButton_auth.setCursor(QtCore.Qt.PointingHandCursor)
-        frame_layout.addWidget(self.pushButton_auth, alignment=QtCore.Qt.AlignCenter)
-        
-        layout.addWidget(frame, alignment=QtCore.Qt.AlignCenter)
+        # Add subtle drop shadow to the landing button for depth
+        try:
+            shadow_btn = QtWidgets.QGraphicsDropShadowEffect()
+            shadow_btn.setBlurRadius(24)
+            shadow_btn.setOffset(0, 8)
+            shadow_btn.setColor(QtGui.QColor(19, 34, 49, 80))
+            self.pushButton_auth.setGraphicsEffect(shadow_btn)
+        except Exception:
+            pass
+
+        # add spacing to separate title and button, then add button centered
+        layout.addSpacing(20)
+        layout.addWidget(self.pushButton_auth, alignment=QtCore.Qt.AlignCenter)
         self.stackedWidget.addWidget(self.page_landing)
 
     def setup_page_auth(self):
@@ -103,19 +74,25 @@ class Ui_MainWindow(object):
         self.page_auth = QtWidgets.QWidget()
         self.page_auth.setObjectName("page_auth")
         layout = QtWidgets.QVBoxLayout(self.page_auth)
-        layout.setContentsMargins(100, 50, 100, 50)
-        layout.setSpacing(25)
+        # reduce side margins so content sits closer to center and not too inset
+        layout.setContentsMargins(60, 40, 60, 40)
+        layout.setSpacing(20)
+        # center contents both horizontally and vertically
+        try:
+            layout.setAlignment(QtCore.Qt.AlignCenter)
+        except Exception:
+            pass
         
         frame = QtWidgets.QFrame()
-        frame.setMaximumWidth(500)
+        frame.setMaximumWidth(520)
+        # Subtle white card used for the auth content, with gentle rounding
         frame.setStyleSheet("""
-            background: qlineargradient(to bottom, white, #f8f9fa); 
-            border-radius: 25px; border: 3px solid #3498db; 
-            box-shadow: 0 10px 30px rgba(52,152,219,0.3);
+            background: qlineargradient(to bottom, white, #fbfdff);
+            border-radius: 14px; border: none;
             QLineEdit {
                 color: #333333;
                 padding: 12px;
-                border: 2px solid #dddddd;
+                border: 1px solid #e3e8ed;
                 border-radius: 8px;
                 background-color: white;
                 font-size: 14px;
@@ -134,11 +111,20 @@ class Ui_MainWindow(object):
                 color: #999999;
             }
         """)
+        # Add drop shadow to auth card for a floating, modern look
+        try:
+            card_shadow = QtWidgets.QGraphicsDropShadowEffect()
+            card_shadow.setBlurRadius(24)
+            card_shadow.setOffset(0, 10)
+            card_shadow.setColor(QtGui.QColor(19, 34, 49, 30))
+            frame.setGraphicsEffect(card_shadow)
+        except Exception:
+            pass
         frame_layout = QtWidgets.QVBoxLayout(frame)
         frame_layout.setSpacing(20)
         frame_layout.setContentsMargins(40, 40, 40, 40)
         
-        title = QtWidgets.QLabel("🔐 Access Your Account")
+        title = QtWidgets.QLabel("Access Your Account")
         title.setObjectName("label_auth_title")
         title.setFont(QtGui.QFont("Segoe UI", 22, QtGui.QFont.Bold))
         title.setAlignment(QtCore.Qt.AlignCenter)
@@ -169,7 +155,7 @@ class Ui_MainWindow(object):
         
         self.btn_login = QtWidgets.QPushButton("Login")
         self.btn_login.setObjectName("btn_login")
-        self.btn_login.setStyleSheet("background: #3498db; color: white; font-size: 16px; min-height: 50px; border-radius: 10px;")
+        self.btn_login.setStyleSheet("background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; font-size: 16px; min-height: 50px; border-radius: 10px; font-weight:700;")
         tab_login_layout.addWidget(self.btn_login)
         self.tabWidget_auth.addTab(tab_login, "Login")
         
@@ -198,7 +184,7 @@ class Ui_MainWindow(object):
         
         self.btn_register = QtWidgets.QPushButton("Create Account")
         self.btn_register.setObjectName("btn_register")
-        self.btn_register.setStyleSheet("background: #f39c12; color: white; font-size: 16px; min-height: 50px; border-radius: 10px;")
+        self.btn_register.setStyleSheet("background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; font-size: 16px; min-height: 50px; border-radius: 10px; font-weight:700;")
         tab_reg_layout.addWidget(self.btn_register)
         self.tabWidget_auth.addTab(tab_register, "Register")
         
@@ -207,7 +193,13 @@ class Ui_MainWindow(object):
         self.btn_back_auth.setObjectName("btn_back_auth")
         frame_layout.addWidget(self.btn_back_auth)
         
-        layout.addWidget(frame, QtCore.Qt.AlignHCenter)
+        # Add stretchers so the frame is vertically centered in the page
+        try:
+            layout.addStretch(1)
+            layout.addWidget(frame, alignment=QtCore.Qt.AlignCenter)
+            layout.addStretch(1)
+        except Exception:
+            layout.addWidget(frame, QtCore.Qt.AlignHCenter)
         self.stackedWidget.addWidget(self.page_auth)
 
     def setup_page_booking(self):
@@ -269,7 +261,7 @@ class Ui_MainWindow(object):
         
         self.btn_confirm = QtWidgets.QPushButton("Confirm Booking")
         self.btn_confirm.setObjectName("btn_confirm")
-        self.btn_confirm.setStyleSheet("background: #27ae60; color: white; font-size: 16px; padding: 12px;")
+        self.btn_confirm.setStyleSheet("background: qlineargradient(spread:pad, x1:0,y1:0,x2:1,y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; font-size: 16px; padding: 12px; border-radius:8px; font-weight:700;")
         form_layout.addRow(self.btn_confirm)
 
         # Slightly larger fonts for readability in the form
@@ -292,6 +284,12 @@ class Ui_MainWindow(object):
         
         self.btn_refresh = QtWidgets.QPushButton("🔄 Refresh")
         self.btn_refresh.setObjectName("btn_refresh")
+        try:
+            self.btn_refresh.setStyleSheet("QPushButton#btn_refresh { background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; border-radius: 8px; padding: 6px 12px; font-weight:700; }")
+            self.btn_refresh.setMinimumHeight(32)
+            self.btn_refresh.setCursor(QtCore.Qt.PointingHandCursor)
+        except Exception:
+            pass
         table_layout.addWidget(self.btn_refresh)
         
         self.table_records = QtWidgets.QTableWidget()
@@ -307,35 +305,67 @@ class Ui_MainWindow(object):
             tbl_font = QtGui.QFont()
             tbl_font.setPointSize(10)
             self.table_records.setFont(tbl_font)
-            # Visual highlight for selection
-            self.table_records.setStyleSheet("QTableWidget::item:selected{background: #cfeffd;}")
+            # Modern visual styles for table and header
+            self.table_records.setStyleSheet("""
+                QTableWidget { background: #ffffff; border: 1px solid #e6edf3; gridline-color: #f6f9fb; }
+                QHeaderView::section { background: #2c3e50; color: white; padding: 6px; font-weight: 700; }
+                QTableWidget::item { padding: 6px; color: #26313b; }
+                QTableWidget::item:selected { background: #dff3ff; color: #17202a; }
+                QTableWidget::item:hover { background: #f6fbff; }
+            """)
+            # Header behavior: center labels and use smart resize modes
+            header = self.table_records.horizontalHeader()
+            header.setDefaultAlignment(QtCore.Qt.AlignCenter)
+            try:
+                header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+                header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+                header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)
+            except Exception:
+                pass
+            # Consistent row height for readability
+            self.table_records.verticalHeader().setDefaultSectionSize(28)
         except Exception:
             pass
         table_layout.addWidget(self.table_records)
         
         self.btn_delete = QtWidgets.QPushButton("❌ Cancel Selected")
         self.btn_delete.setObjectName("btn_delete")
+        # Make action buttons full-width and consistent
+        try:
+            self.btn_delete.setMinimumHeight(36)
+            self.btn_delete.setStyleSheet("background-color: #e74c3c; color: white; border-radius: 6px;")
+        except Exception:
+            pass
         table_layout.addWidget(self.btn_delete)
         
         self.btn_rebook = QtWidgets.QPushButton("🔄 Rebook Selected")
         self.btn_rebook.setObjectName("btn_rebook")
         self.btn_rebook.setStyleSheet("""
             QPushButton#btn_rebook {
-                background-color: #f39c12;
+                background: qlineargradient(spread:pad, x1:0,y1:0,x2:1,y2:0, stop:0 #4facfe, stop:1 #1f6fbf);
                 color: white;
                 border: none;
-                border-radius: 4px;
+                border-radius: 6px;
                 padding: 8px 16px;
-                font-weight: bold;
+                font-weight: 700;
             }
             QPushButton#btn_rebook:hover {
-                background-color: #e67e22;
+                filter: brightness(1.05);
             }
         """)
+        try:
+            self.btn_rebook.setMinimumHeight(36)
+        except Exception:
+            pass
         table_layout.addWidget(self.btn_rebook)
         
         self.btn_logout = QtWidgets.QPushButton("Logout")
         self.btn_logout.setObjectName("btn_logout")
+        try:
+            self.btn_logout.setMinimumHeight(30)
+            self.btn_logout.setStyleSheet("background-color: #ecf0f1; color: #2c3e50; border-radius: 6px;")
+        except Exception:
+            pass
         table_layout.addWidget(self.btn_logout)
         
         layout.addWidget(table_frame, 0, 1)
@@ -347,7 +377,7 @@ class Ui_MainWindow(object):
         self.page_admin.setObjectName("page_admin")
         layout = QtWidgets.QVBoxLayout(self.page_admin)
         
-        title = QtWidgets.QLabel("👨‍💼 Admin Dashboard")
+        title = QtWidgets.QLabel("Admin Dashboard")
         title.setFont(QtGui.QFont("Segoe UI", 24, QtGui.QFont.Bold))
         title.setAlignment(QtCore.Qt.AlignCenter)
         title.setStyleSheet("color: #8e44ad; margin: 20px;")
@@ -357,8 +387,13 @@ class Ui_MainWindow(object):
         h_layout = QtWidgets.QHBoxLayout()
         self.input_search_admin = QtWidgets.QLineEdit(placeholderText="Admin search...")
         self.input_search_admin.setObjectName("input_search_admin")
+        self.input_search_admin.setMinimumHeight(32)
+        self.input_search_admin.setStyleSheet("border: 1px solid #d6dce2; border-radius: 8px; padding: 6px 10px; background: white;")
         h_layout.addWidget(self.input_search_admin)
         self.btn_refresh_admin = QtWidgets.QPushButton("Refresh All")
+        self.btn_refresh_admin.setObjectName("btn_refresh_admin")
+        self.btn_refresh_admin.setMinimumHeight(32)
+        self.btn_refresh_admin.setStyleSheet("QPushButton#btn_refresh_admin { background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; border-radius: 8px; padding: 6px 12px; font-weight:700; } QPushButton#btn_refresh_admin:hover { filter:brightness(1.05); }")
         h_layout.addWidget(self.btn_refresh_admin)
         layout.addLayout(h_layout)
         
@@ -366,7 +401,50 @@ class Ui_MainWindow(object):
         self.table_records_admin.setColumnCount(9)
         self.table_records_admin.setHorizontalHeaderLabels(["ID", "Name", "Phone", "Room", "Guests", "Check-in", "Nights", "Status", "Total"])
         self.table_records_admin.setObjectName("table_records_admin")
-        layout.addWidget(self.table_records_admin)
+        # Improve admin table visuals to match booking table
+        try:
+            self.table_records_admin.setAlternatingRowColors(True)
+            self.table_records_admin.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+            self.table_records_admin.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            tbl_font = QtGui.QFont()
+            tbl_font.setPointSize(10)
+            self.table_records_admin.setFont(tbl_font)
+            self.table_records_admin.setStyleSheet("""
+                QTableWidget { background: #ffffff; border: 1px solid #e6edf3; gridline-color: #f6f9fb; }
+                QHeaderView::section { background: #2c3e50; color: white; padding: 6px; font-weight: 700; }
+                QTableWidget::item { padding: 6px; color: #26313b; }
+                QTableWidget::item:selected { background: #dff3ff; color: #17202a; }
+                QTableWidget::item:hover { background: #f6fbff; }
+            """)
+            header_adm = self.table_records_admin.horizontalHeader()
+            header_adm.setDefaultAlignment(QtCore.Qt.AlignCenter)
+            try:
+                header_adm.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+                header_adm.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+                header_adm.setSectionResizeMode(8, QtWidgets.QHeaderView.ResizeToContents)
+            except Exception:
+                pass
+            self.table_records_admin.verticalHeader().setDefaultSectionSize(28)
+        except Exception:
+            pass
+        # Wrap admin table in a light card to improve visual separation
+        try:
+            table_card = QtWidgets.QFrame()
+            table_card.setStyleSheet("background: white; border-radius: 10px; border: 1px solid #e6edf3; padding: 8px;")
+            table_layout = QtWidgets.QVBoxLayout(table_card)
+            table_layout.setContentsMargins(6,6,6,6)
+            table_layout.addWidget(self.table_records_admin)
+            layout.addWidget(table_card)
+        except Exception:
+            layout.addWidget(self.table_records_admin)
+
+        # Add styling for logout button to match admin theming
+        try:
+            self.btn_logout_admin.setStyleSheet("QPushButton { background: #7f8c8d; color: white; border-radius: 8px; padding: 8px 14px; font-weight:700; } QPushButton:hover { background:#95a5a6; }")
+            self.btn_refresh_admin.setCursor(QtCore.Qt.PointingHandCursor)
+            self.input_search_admin.setClearButtonEnabled(True)
+        except Exception:
+            pass
         
         btn_layout = QtWidgets.QHBoxLayout()
         self.btn_delete_admin = QtWidgets.QPushButton("❌ Cancel Selected")
@@ -377,21 +455,19 @@ class Ui_MainWindow(object):
         except Exception:
             pass
 
-        # (Approve button removed) admin approval handled server-side; keep UI minimal
-        
         self.btn_rebook_admin = QtWidgets.QPushButton("🔄 Rebook Selected")
         self.btn_rebook_admin.setObjectName("btn_rebook_admin")
         self.btn_rebook_admin.setStyleSheet("""
             QPushButton#btn_rebook_admin {
-                background-color: #f39c12;
+                background: qlineargradient(spread:pad, x1:0,y1:0,x2:1,y2:0, stop:0 #4facfe, stop:1 #1f6fbf);
                 color: white;
                 border: none;
-                border-radius: 4px;
+                border-radius: 6px;
                 padding: 8px 16px;
-                font-weight: bold;
+                font-weight: 700;
             }
             QPushButton#btn_rebook_admin:hover {
-                background-color: #e67e22;
+                filter: brightness(1.05);
             }
         """)
         btn_layout.addWidget(self.btn_rebook_admin)

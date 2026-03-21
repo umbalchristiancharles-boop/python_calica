@@ -6,7 +6,8 @@
       "password": "Admin@123",
       "role": "admin",
       "name": "Hotel Admin",
-      "phone": "09000000000"
+      "phone": "09000000000",
+      "id": 1
     },
     {
       "username": "mark",
@@ -23,6 +24,14 @@
       "role": "customer",
       "name": "Mark Calica",
       "phone": "09071616414"
+    },
+    {
+      "username": "vinci",
+      "email": "vinci@test.com",
+      "password": "Vince@123",
+      "role": "customer",
+      "name": "Vinzii Hanzi",
+      "phone": "09761414212"
     }
   ]
 }

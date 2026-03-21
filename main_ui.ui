@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Hotel System</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QStackedWidget" name="stackedWidget">
+      <!-- Landing Page -->
+      <widget class="QWidget" name="page_landing">
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item>
+         <widget class="QFrame" name="landing_frame">
+          <property name="maximumSize">
+           <size>
+            <width>600</width>
+            <height>220</height>
+           </size>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QLabel" name="lbl_title">
+             <property name="text">
+              <string>Welcome to Hotel Reservation System</string>
+             </property>
+             <property name="alignment">
+              <enum>Qt::AlignHCenter</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_auth">
+             <property name="text">
+              <string>Login / Register</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- Booking Page (placeholder) -->
+      <widget class="QWidget" name="page_booking"/>
+      <!-- Admin Page (placeholder) -->
+      <widget class="QWidget" name="page_admin"/>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

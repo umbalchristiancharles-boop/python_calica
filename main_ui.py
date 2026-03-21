@@ -8,7 +8,17 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(704, 878)
-        MainWindow.setStyleSheet("")
+        # Global app styles: modern font and soft background gradient (Instagram-inspired accent)
+        MainWindow.setStyleSheet("""
+            QWidget { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #233043; }
+            /* Soft background gradient */
+            #centralwidget { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f7f9fb, stop:1 #e6f3ff); }
+            /* Default button look - refined */
+            QPushButton { border-radius: 10px; padding: 8px 14px; font-weight: 600; }
+            /* App primary blue gradient for primary buttons */
+            QPushButton.primary { background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; }
+            QPushButton.primary:hover { filter: brightness(1.05); }
+        """)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setAutoFillBackground(False)
         self.centralwidget.setStyleSheet("#centralwidget {\n"
@@ -27,115 +37,87 @@ class Ui_MainWindow(object):
         self.page_landing.setObjectName("page_landing")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.page_landing)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.landing_frame = QtWidgets.QFrame(self.page_landing)
-        self.landing_frame.setMaximumSize(QtCore.QSize(400, 300))
-        self.landing_frame.setStyleSheet("#landing_frame {\n"
-"    background-color: rgba(255, 255, 255, 220); /* White with 85% opacity */\n"
-"    border-radius: 15px;\n"
-"}\n"
-"\n"
-"QPushButton {\n"
-"    background-color: #2c3e50;\n"
-"    color: white;\n"
-"    border-radius: 10px;\n"
-"    padding: 12px;\n"
-"    font-size: 14px;\n"
-"    transition: background-color 0.3s;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #34495e;\n"
-"    border: 2px solid #3498db;\n"
-"}")
-        self.landing_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.landing_frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.landing_frame.setObjectName("landing_frame")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.landing_frame)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.label = QtWidgets.QLabel(self.landing_frame)
+        # Add vertical spacing so landing content sits near center
+        try:
+            self.gridLayout_2.setContentsMargins(0, 120, 0, 120)
+        except Exception:
+            pass
+        # Place title and auth button directly on the landing page (no container)
+        self.label = QtWidgets.QLabel(self.page_landing)
         font = QtGui.QFont()
-        font.setPointSize(19)
+        font.setPointSize(30)
         font.setBold(True)
         self.label.setFont(font)
         self.label.setAutoFillBackground(False)
-        self.label.setObjectName("label")
-        self.verticalLayout.addWidget(self.label, 0, QtCore.Qt.AlignHCenter)
-        self.pushButton = QtWidgets.QPushButton(self.landing_frame)
-        self.pushButton.setObjectName("pushButton")
-        self.verticalLayout.addWidget(self.pushButton)
-        self.gridLayout_2.addWidget(self.landing_frame, 0, 0, 1, 1)
+        self.label.setObjectName("lbl_title")
+        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
+
+        self.pushButton_auth = QtWidgets.QPushButton(self.page_landing)
+        self.pushButton_auth.setObjectName("pushButton_auth")
+        self.gridLayout_2.addWidget(self.pushButton_auth, 1, 0, 1, 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
         self.stackedWidget.addWidget(self.page_landing)
         self.page_booking = QtWidgets.QWidget()
         self.page_booking.setStyleSheet("QGroupBox {\n"
-"    font-size: 14px;\n"
-"    font-weight: bold;\n"
-"    color: #000000;\n"
-"    border: 2px solid #dcdde1;\n"
+    "    font-size: 14px;\n"
+    "    font-weight: 700;\n"
+    "    color: #2c3e50;\n"
+    "    border: 1px solid #e6e9ee;\n"
+    "    border-radius: 12px;\n"
+    "    margin-top: 18px;\n"
+    "    padding: 14px;\n"
+    "    background-color: rgba(255,255,255,0.95);\n"
+    "}\n"
+    "\n"
+    "QGroupBox::title {\n"
+    "    subcontrol-origin: margin;\n"
+    "    subcontrol-position: top left;\n"
+    "    left: 12px;\n"
+    "    padding: 0 6px;\n"
+    "    color: #1f3a57;\n"
+    "}\n"
+    "\n"
+    "QLineEdit, QComboBox, QDateEdit, QSpinBox, QPlainTextEdit {\n"
+    "    border: 1px solid #d0d7df;\n"
+    "    border-radius: 8px;\n"
+    "    padding: 8px;\n"
+    "    background-color: #ffffff;\n"
+    "    color: #233042;\n"
+    "    font-size: 14px;\n"
+    "}\n"
+    "\n"
+    "QLineEdit:focus, QComboBox:focus, QDateEdit:focus {\n"
+    "    border: 2px solid #3498db;\n"
+    "    background-color: #fff;\n"
+    "}\n"
+    "\n"
+    "QLabel {\n"
+    "    font-size: 14px;\n"
+    "    color: #2c3e50;\n"
+    "}\n"
+    "\n"
+            "QPushButton#btn_confirm {\n"
+"    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf);\n"
+"    color: white;\n"
 "    border-radius: 10px;\n"
-"    margin-top: 20px;\n"
-"    padding: 10px;\n"
-"    background-color: #ffffff;\n"
-"    border: 1px solid #dcdde1;\n"
-"    border-radius: 15px;\n"
-"    padding: 20px;\n"
+"    font-weight: 700;\n"
+"    min-height: 40px;\n"
+"    padding: 10px 20px;\n"
 "}\n"
-"\n"
-"QGroupBox::title {\n"
-"    subcontrol-origin: margin;\n"
-"    subcontrol-position: top left;\n"
-"    left: 15px;\n"
-"    padding: 0 5px;\n"
-"}\n"
-"\n"
-"/* Style all Input Fields (LineEdits, Combo Boxes, and DateEdits) */\n"
-"QLineEdit, QComboBox, QDateEdit, QSpinBox, QPlainTextEdit {\n"
-"    border: 1px solid #ced4da;\n"
-"    border-radius: 5px;\n"
-"    padding: 5px;\n"
-"    background-color: #f8f9fa;\n"
-"    color: #333;\n"
-"    font-size: 13px;\n"
-"}\n"
-"\n"
-"QLineEdit:focus, QComboBox:focus, QDateEdit:focus {\n"
-"    border: 2px solid #3498db; /* Blue glow when typing */\n"
-"    background-color: #fff;\n"
-"}\n"
-"\n"
-"/* Style the Labels */\n"
-"QLabel {\n"
-"    font-size: 13px;\n"
-"    color: #34495e;\n"
-"    font-weight: normal;\n"
-"}\n"
-"\n"
-"/* The Confirm Button */\n"
-"QPushButton#btn_confirm {\n"
-"    background-color: #27ae60;\n"
-"    color: white;\n"
-"    border-radius: 6px;\n"
-"    font-weight: bold;\n"
-"    min-height: 35px;\n"
-"}\n"
-"\n"
-"/* THE HOVER - Make sure there is NO space between the name and the colon */\n"
 "QPushButton#btn_confirm:hover {\n"
-"    background-color: #2ecc71; /* A lighter green */\n"
+"    filter: brightness(1.05);\n"
 "}\n"
-"\n"
-"/* The Back Button */\n"
-"QPushButton#btn_back {\n"
-"    background-color: rgba(255, 255, 255, 0.2); \n"
-"    color: #c0392b;\n"
-"    border: 1px solid #c0392b;\n"
-"    border-radius: 6px;\n"
-"    min-height: 35px;\n"
-"}\n"
-"\n"
-"QPushButton#btn_back:hover {\n"
-"    background-color: #c0392b;\n"
-"    color: white;\n"
-"}")
+    "\n"
+    "QPushButton#btn_back {\n"
+    "    background-color: transparent;\n"
+    "    color: #2c3e50;\n"
+    "    border: 1px solid #cfcfcf;\n"
+    "    border-radius: 8px;\n"
+    "    min-height: 36px;\n"
+    "    padding: 8px 14px;\n"
+    "}\n"
+    "QPushButton#btn_back:hover {\n"
+    "    background-color: #eaf2fb;\n"
+    "}")
         self.page_booking.setObjectName("page_booking")
         self.gridLayout = QtWidgets.QGridLayout(self.page_booking)
         self.gridLayout.setContentsMargins(100, 50, 100, 50)
@@ -252,113 +234,82 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.page_booking)
         self.page_admin = QtWidgets.QWidget()
         self.page_admin.setAutoFillBackground(False)
-        self.page_admin.setStyleSheet("/* Background of the Admin Page */\n"
-"QWidget#page_admin {\n"
-"    background-color: #f4f7f6;\n"
-"}\n"
-"\n"
-"/* Table Design */\n"
-"QTableWidget {\n"
-"    background-color: white;\n"
-"    border: 1px solid #dcdfe3;\n"
-"    gridline-color: #f0f0f0;\n"
-"    border-radius: 5px;\n"
-"}\n"
-"\n"
-"QHeaderView::section {\n"
-"    background-color: #34495e;\n"
+        self.page_admin.setStyleSheet("QWidget#page_admin {\n"
+    "    background-color: #f6fbff;\n"
+    "}\n"
+    "\n"
+    "QTableWidget {\n"
+    "    background-color: #ffffff;\n"
+    "    border: 1px solid #e6edf3;\n"
+    "    gridline-color: #f6f9fb;\n"
+    "    border-radius: 8px;\n"
+    "    selection-background-color: #eaf6ff;\n"
+    "}\n"
+    "QTableWidget::item {\n"
+    "    padding: 8px;\n"
+    "    color: #26313b;\n"
+    "}\n"
+    "QTableWidget::item:selected {\n"
+    "    background-color: #dff3ff;\n"
+    "}\n"
+    "QTableView::item:hover {\n"
+    "    background-color: #f2fbff;\n"
+    "}\n"
+    "\n"
+    "QHeaderView::section {\n"
+    "    background-color: #2c3e50;\n"
+    "    color: white;\n"
+    "    padding: 8px;\n"
+    "    font-weight: 700;\n"
+    "    border: none;\n"
+    "    border-right: 1px solid rgba(255,255,255,0.06);\n"
+    "}\n"
+    "\n"
+    "QPushButton {\n"
+    "    border-radius: 8px;\n"
+    "    padding: 8px 14px;\n"
+    "    font-weight: 700;\n"
+    "    font-size: 13px;\n"
+    "}\n"
+            "QPushButton#btn_refresh {\n"
+"    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf);\n"
 "    color: white;\n"
-"    padding: 6px;\n"
-"    font-weight: bold;\n"
-"    border: none;\n"
 "}\n"
-"\n"
-"/* Common Button Settings */\n"
-"QPushButton {\n"
-"    border-radius: 4px;\n"
-"    padding: 8px 16px;\n"
-"    font-weight: bold;\n"
-"    font-size: 12px;\n"
-"}\n"
-"\n"
-"/* --- REFRESH BUTTON (Green) --- */\n"
-"QPushButton#btn_refresh {\n"
-"    background-color: #27ae60;\n"
-"    color: white;\n"
-"    border: none;\n"
-"}\n"
-"QPushButton#btn_refresh:hover {\n"
-"    background-color: #2ecc71;\n"
-"}\n"
-"\n"
-"/* --- DELETE BUTTON (Red) --- */\n"
-"QPushButton#btn_delete {\n"
-"    background-color: #e74c3c;\n"
-"    color: white;\n"
-"    border: none;\n"
-"}\n"
-"QPushButton#btn_delete:hover {\n"
-"    background-color: #ff5e4d;\n"
-"}\n"
-"\n"
-"/* --- LOGOUT BUTTON (Dark Grey/Professional) --- */\n"
-"QPushButton#btn_logout {\n"
-"    background-color: #95a5a6;\n"
-"    color: white;\n"
-"    border: none;\n"
-"}\n"
-"QPushButton#btn_logout:hover {\n"
-"    background-color: #7f8c8d;\n"
-"}\n"
-"\n"
-"/* Search Bar Styling */\n"
-"QLineEdit {\n"
-"    border: 1px solid #bdc3c7;\n"
-"    border-radius: 4px;\n"
-"    padding: 5px;\n"
-"    background-color: white;\n"
-"}\n"
-"\n"
-"/* Table Header Styling */\n"
-"QHeaderView::section {\n"
-"    background-color: #1a1a1a; /* Matches your Black title vibe */\n"
-"    color: white;\n"
-"    padding: 8px;\n"
-"    font-weight: bold;\n"
-"    border: none;\n"
-"    border-right: 1px solid #333; /* Subtle divider */\n"
-"}\n"
-"\n"
-"/* Make the Total Bill column bold */\n"
-"QTableWidget::item {\n"
-"    padding: 5px;\n"
-"}\n"
-"\n"
-"/* Highlight the last column (Total Bill) */\n"
-"QTableWidget::item:last-child {\n"
-"    font-weight: bold;\n"
-"    color: #27ae60; /* Money green */\n"
-"}\n"
-"\n"
-"/* LOGOUT BUTTON (Normal) */\n"
-"QPushButton#btn_logout {\n"
-"    background-color: #7f8c8d; /* Professional Slate Grey */\n"
-"    color: white;\n"
-"    border: none;\n"
-"    border-radius: 4px;\n"
-"    padding: 5px 15px;\n"
-"    font-weight: bold;\n"
-"}\n"
-"\n"
-"/* LOGOUT BUTTON (Hover) */\n"
-"QPushButton#btn_logout:hover {\n"
-"    background-color: #95a5a6; /* Lighter grey so it \"lights up\" */\n"
-"}\n"
-"\n"
-"/* LOGOUT BUTTON (Pressed) */\n"
-"QPushButton#btn_logout:pressed {\n"
-"    background-color: #2c3e50; /* Deep blue-grey when clicked */\n"
-"}")
+    "QPushButton#btn_refresh:hover {\n"
+    "    filter: brightness(1.05);\n"
+    "}\n"
+    "QPushButton#btn_delete {\n"
+    "    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #e74c3c, stop:1 #ff5e4d);\n"
+    "    color: white;\n"
+    "}\n"
+    "QPushButton#btn_delete:hover {\n"
+    "    filter: brightness(1.05);\n"
+    "}\n"
+    "QPushButton#btn_logout {\n"
+    "    background-color: #7f8c8d;\n"
+    "    color: white;\n"
+    "    border-radius: 8px;\n"
+    "    padding: 8px 12px;\n"
+    "}\n"
+    "QPushButton#btn_logout:hover {\n"
+    "    background-color: #95a5a6;\n"
+    "}\n"
+    "\n"
+    "QLineEdit {\n"
+    "    border: 1px solid #d6dce2;\n"
+    "    border-radius: 8px;\n"
+    "    padding: 8px;\n"
+    "    background-color: white;\n"
+    "}\n"
+    "\n"
+    "QTableWidget::item:last-child {\n"
+    "    font-weight: 700;\n"
+    "    color: #1f6fbf;\n"
+    "}\n"
+    "\n"
+    "QTableWidget::item:hover {\n"
+    "    cursor: pointer;\n"
+    "}")
         self.page_admin.setObjectName("page_admin")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.page_admin)
         self.verticalLayout_3.setContentsMargins(20, 20, 20, 20)
@@ -388,6 +339,15 @@ class Ui_MainWindow(object):
         self.lbl_admin_title.setObjectName("lbl_admin_title")
         self.horizontalLayout_2.addWidget(self.lbl_admin_title)
         self.btn_logout = QtWidgets.QPushButton(self.header_frame)
+        # Slightly larger button text for important controls
+        try:
+            font_btn = QtGui.QFont()
+            font_btn.setPointSize(12)
+            self.btn_confirm.setFont(font_btn)
+            self.btn_back.setFont(font_btn)
+            self.btn_logout.setFont(font_btn)
+        except Exception:
+            pass
         self.btn_logout.setObjectName("btn_logout")
         self.horizontalLayout_2.addWidget(self.btn_logout)
         self.verticalLayout_3.addWidget(self.header_frame)
@@ -426,25 +386,25 @@ class Ui_MainWindow(object):
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem2)
         self.btn_refresh = QtWidgets.QPushButton(self.footer_frame)
-        self.btn_refresh.setStyleSheet("/* --- REFRESH BUTTON (Normal State - Green) --- */\n"
-"QPushButton#btn_refresh {\n"
-"    background-color: #27ae60; /* Emerald Green */\n"
-"    color: white;\n"
-"    border: none;\n"
-"    border-radius: 4px;\n"
-"    padding: 8px 16px;\n"
-"    font-weight: bold;\n"
-"}\n"
-"\n"
-"/* REFRESH BUTTON (Hover State - Lighter Green) */\n"
-"QPushButton#btn_refresh:hover {\n"
-"    background-color: #2ecc71; /* Brighter Green */\n"
-"}\n"
-"\n"
-"/* REFRESH BUTTON (Pressed State - Darker Green) */\n"
-"QPushButton#btn_refresh:pressed {\n"
-"    background-color: #1e8449;\n"
-"}")
+        self.btn_refresh.setStyleSheet("/* --- REFRESH BUTTON (Normal State - Blue) --- */\n"
+    "QPushButton#btn_refresh {\n"
+    "    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf);\n"
+    "    color: white;\n"
+    "    border: none;\n"
+    "    border-radius: 4px;\n"
+    "    padding: 8px 16px;\n"
+    "    font-weight: bold;\n"
+    "}\n"
+    "\n"
+    "/* REFRESH BUTTON (Hover State) */\n"
+    "QPushButton#btn_refresh:hover {\n"
+    "    filter: brightness(1.05);\n"
+    "}\n"
+    "\n"
+    "/* REFRESH BUTTON (Pressed State) */\n"
+    "QPushButton#btn_refresh:pressed {\n"
+    "    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #3aa6fb, stop:1 #1a61b8);\n"
+    "}")
         self.btn_refresh.setObjectName("btn_refresh")
         self.horizontalLayout_3.addWidget(self.btn_refresh)
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -494,7 +454,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "Welcome to Hotel Reservation System"))
-        self.pushButton.setText(_translate("MainWindow", "🔐 Login"))
+        self.pushButton.setText(_translate("MainWindow", "Login"))
         self.btn_back.setText(_translate("MainWindow", "Back to Home"))
         self.groupBox_3.setTitle(_translate("MainWindow", "Guest Details"))
         self.label_2.setText(_translate("MainWindow", "Full Name"))
