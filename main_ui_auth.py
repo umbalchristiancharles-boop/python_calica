@@ -308,18 +308,24 @@ class Ui_MainWindow(object):
             # Modern visual styles for table and header
             self.table_records.setStyleSheet("""
                 QTableWidget { background: #ffffff; border: 1px solid #e6edf3; gridline-color: #f6f9fb; }
-                QHeaderView::section { background: #2c3e50; color: white; padding: 6px; font-weight: 700; }
+                QHeaderView::section { background: #f5f7fa; color: #263238; padding: 6px; font-weight: 700; border-bottom: 1px solid #e6eef6; }
                 QTableWidget::item { padding: 6px; color: #26313b; }
-                QTableWidget::item:selected { background: #dff3ff; color: #17202a; }
+                QTableWidget::item:selected { background: #e8f3ff; color: #17202a; }
                 QTableWidget::item:hover { background: #f6fbff; }
             """)
             # Header behavior: center labels and use smart resize modes
             header = self.table_records.horizontalHeader()
             header.setDefaultAlignment(QtCore.Qt.AlignCenter)
             try:
-                header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
-                header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-                header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)
+                # Explicit per-column resize modes for predictable layout
+                header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # ID
+                header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)           # Name
+                header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)           # Room
+                header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)  # Guests
+                header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)  # Check-in
+                header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)  # Nights
+                header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)  # Status
+                header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)  # Total
             except Exception:
                 pass
             # Consistent row height for readability
@@ -349,9 +355,7 @@ class Ui_MainWindow(object):
                 padding: 8px 16px;
                 font-weight: 700;
             }
-            QPushButton#btn_rebook:hover {
-                filter: brightness(1.05);
-            }
+            /* hover brightness removed for compatibility */
         """)
         try:
             self.btn_rebook.setMinimumHeight(36)
@@ -393,13 +397,14 @@ class Ui_MainWindow(object):
         self.btn_refresh_admin = QtWidgets.QPushButton("Refresh All")
         self.btn_refresh_admin.setObjectName("btn_refresh_admin")
         self.btn_refresh_admin.setMinimumHeight(32)
-        self.btn_refresh_admin.setStyleSheet("QPushButton#btn_refresh_admin { background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; border-radius: 8px; padding: 6px 12px; font-weight:700; } QPushButton#btn_refresh_admin:hover { filter:brightness(1.05); }")
+        self.btn_refresh_admin.setStyleSheet("QPushButton#btn_refresh_admin { background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; border-radius: 8px; padding: 6px 12px; font-weight:700; }")
         h_layout.addWidget(self.btn_refresh_admin)
         layout.addLayout(h_layout)
         
         self.table_records_admin = QtWidgets.QTableWidget()
-        self.table_records_admin.setColumnCount(9)
-        self.table_records_admin.setHorizontalHeaderLabels(["ID", "Name", "Phone", "Room", "Guests", "Check-in", "Nights", "Status", "Total"])
+        self.table_records_admin.setColumnCount(10)
+        # Add Username column (index 1) so admin can see which account made the booking
+        self.table_records_admin.setHorizontalHeaderLabels(["ID", "Username", "Name", "Phone", "Room", "Guests", "Check-in", "Nights", "Status", "Total"])
         self.table_records_admin.setObjectName("table_records_admin")
         # Improve admin table visuals to match booking table
         try:
@@ -411,17 +416,25 @@ class Ui_MainWindow(object):
             self.table_records_admin.setFont(tbl_font)
             self.table_records_admin.setStyleSheet("""
                 QTableWidget { background: #ffffff; border: 1px solid #e6edf3; gridline-color: #f6f9fb; }
-                QHeaderView::section { background: #2c3e50; color: white; padding: 6px; font-weight: 700; }
+                QHeaderView::section { background: #f5f7fa; color: #263238; padding: 6px; font-weight: 700; border-bottom: 1px solid #e6eef6; }
                 QTableWidget::item { padding: 6px; color: #26313b; }
-                QTableWidget::item:selected { background: #dff3ff; color: #17202a; }
+                QTableWidget::item:selected { background: #e8f3ff; color: #17202a; }
                 QTableWidget::item:hover { background: #f6fbff; }
             """)
             header_adm = self.table_records_admin.horizontalHeader()
             header_adm.setDefaultAlignment(QtCore.Qt.AlignCenter)
             try:
-                header_adm.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
-                header_adm.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-                header_adm.setSectionResizeMode(8, QtWidgets.QHeaderView.ResizeToContents)
+                # Admin table: specify per-column sizing for clarity
+                header_adm.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # ID
+                header_adm.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)  # Username
+                header_adm.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)           # Name
+                header_adm.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)  # Phone
+                header_adm.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)           # Room
+                header_adm.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)  # Guests
+                header_adm.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)  # Check-in
+                header_adm.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)  # Nights
+                header_adm.setSectionResizeMode(8, QtWidgets.QHeaderView.ResizeToContents)  # Status
+                header_adm.setSectionResizeMode(9, QtWidgets.QHeaderView.ResizeToContents)  # Total
             except Exception:
                 pass
             self.table_records_admin.verticalHeader().setDefaultSectionSize(28)
@@ -466,9 +479,7 @@ class Ui_MainWindow(object):
                 padding: 8px 16px;
                 font-weight: 700;
             }
-            QPushButton#btn_rebook_admin:hover {
-                filter: brightness(1.05);
-            }
+            /* hover brightness removed for compatibility */
         """)
         btn_layout.addWidget(self.btn_rebook_admin)
         # Hide admin rebook button per request (keep attribute for backend logic)

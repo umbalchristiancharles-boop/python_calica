@@ -1,113 +1,237 @@
--- Enhanced Hotel Database Schema v2.1 - Cancel/Rebook Support
--- Generated for Hotel Reservation System  
--- Run this in phpMyAdmin after backing up existing DB!
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Mar 21, 2026 at 10:48 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
-DROP DATABASE IF EXISTS `hotel_db`;
-CREATE DATABASE `hotel_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `hotel_db`;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
--- Room Types Table (normalized prices)
-CREATE TABLE `room_types` (
-  `id` INT PRIMARY KEY AUTO_INCREMENT,
-  `name` VARCHAR(50) NOT NULL,
-  `price_per_night` DECIMAL(8,2) NOT NULL,
-  `max_guests` INT DEFAULT 4,
-  `description` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `room_types` (`name`, `price_per_night`, `max_guests`, `description`) VALUES
-('Standard', 100.00, 4, 'Comfortable standard room'),
-('Deluxe', 250.00, 4, 'Luxury deluxe room with extra amenities'),
-('Suite', 500.00, 6, 'Presidential suite with full amenities');
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
--- Users Table (unified auth for admin/customer)
-CREATE TABLE `users` (
-  `id` INT PRIMARY KEY AUTO_INCREMENT,
-  `name` VARCHAR(100) NOT NULL,
-  `username` VARCHAR(50) UNIQUE NOT NULL,
-  `email` VARCHAR(255) UNIQUE NOT NULL,
-  `phone` VARCHAR(20),
-  `password` VARCHAR(255) NOT NULL,
-  `role` ENUM('admin', 'customer') DEFAULT 'customer',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX `idx_username` (`username`),
-  INDEX `idx_email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+--
+-- Database: `hotel_db`
+--
 
--- Default admin
-INSERT INTO `users` (`name`, `username`, `email`, `phone`, `password`, `role`) VALUES
-('Hotel Admin', 'Admin', 'admin@hotel.com', '09000000000', 'Admin@123', 'admin');
+-- --------------------------------------------------------
 
--- Updated Bookings Table with FKs
+--
+-- Table structure for table `bookings`
+--
+
 CREATE TABLE `bookings` (
-  `id` INT PRIMARY KEY AUTO_INCREMENT,
-  `user_id` INT NULL,
-  `room_type_id` INT NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `phone` VARCHAR(20),
-  `email` VARCHAR(255),
-  `checkin` DATE NOT NULL,
-  `checkout` DATE NOT NULL,
-  `nights` INT NOT NULL,
-  `guests` INT NOT NULL,
-  `payment` VARCHAR(50) DEFAULT 'Cash at Check-in',
-  `requests` TEXT,
-  `status` ENUM('Pending', 'Confirmed', 'Checked-in', 'Checked-out', 'Cancelled') DEFAULT 'Confirmed',
-  `cancellation_reason` TEXT NULL,
-  `rebooking_reason` TEXT NULL,
-  `rebooked_from_id` INT NULL,
-  FOREIGN KEY (`rebooked_from_id`) REFERENCES `bookings`(`id`) ON DELETE SET NULL,
-  `total_bill` DECIMAL(10,2) NOT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
-  FOREIGN KEY (`room_type_id`) REFERENCES `room_types`(`id`) ON DELETE RESTRICT,
-  INDEX `idx_name` (`name`),
-  INDEX `idx_checkin` (`checkin`),
-  INDEX `idx_status` (`status`),
-  INDEX `idx_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `room_type_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `checkin` date NOT NULL,
+  `checkout` date NOT NULL,
+  `nights` int(11) NOT NULL,
+  `guests` int(11) NOT NULL,
+  `payment` varchar(50) DEFAULT 'Cash at Check-in',
+  `requests` text DEFAULT NULL,
+  `status` enum('Pending','Confirmed','Checked-in','Checked-out','Cancelled') DEFAULT 'Confirmed',
+  `total_bill` decimal(10,2) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `cancellation_reason` text DEFAULT NULL,
+  `rebooked_from_id` int(11) DEFAULT NULL,
+  `rebooking_reason` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Trigger to auto-calculate nights and total
-DELIMITER //
-CREATE TRIGGER `before_booking_insert` BEFORE INSERT ON `bookings`
-FOR EACH ROW
-BEGIN
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`id`, `user_id`, `room_type_id`, `name`, `phone`, `email`, `checkin`, `checkout`, `nights`, `guests`, `payment`, `requests`, `status`, `total_bill`, `created_at`, `cancellation_reason`, `rebooked_from_id`, `rebooking_reason`) VALUES
+(1, 1, 1, 'Charles Umbal', '09071616515', 'charles@test.com', '2026-04-02', '2026-04-06', 4, 4, 'Cash at Check-in', 'none', 'Confirmed', 1600.00, '2026-03-21 04:01:56', NULL, NULL, NULL),
+(2, 1, 1, 'Gab', '09071413515', 'gab@test.com', '2026-04-20', '2026-04-23', 3, 10, 'Credit Card', 'ywuwu', 'Confirmed', 3000.00, '2026-03-21 04:01:56', NULL, NULL, NULL),
+(4, NULL, 2, 'Mark Julius', '09081515313', 'mark@test.com', '2026-03-21', '2026-03-24', 3, 5, 'Cash at Check-in', 'eme', 'Cancelled', 3750.00, '2026-03-21 04:30:50', 'cancelll', NULL, NULL),
+(5, NULL, 3, 'Vinzii Hanzi', '09761414212', 'vinci@test.com', '2026-04-21', '2026-04-24', 3, 1, 'Cash at Check-in', 'emeee', 'Confirmed', 1500.00, '2026-03-21 08:04:00', NULL, NULL, NULL),
+(6, NULL, 1, 'Vinzii Hanzi', '09761414212', 'vinci@test.com', '2026-04-15', '2026-04-16', 1, 1, 'Cash at Check-in', 'faeaef', '', 100.00, '2026-03-21 08:13:58', 'ayoko na', 5, 'rebook');
+
+--
+-- Triggers `bookings`
+--
+DELIMITER $$
+CREATE TRIGGER `before_booking_insert` BEFORE INSERT ON `bookings` FOR EACH ROW BEGIN
   SET NEW.nights = DATEDIFF(NEW.checkout, NEW.checkin);
   IF NEW.nights <= 0 THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Checkout must be after checkin';
   END IF;
   SET NEW.total_bill = NEW.nights * (SELECT price_per_night FROM room_types WHERE id = NEW.room_type_id) * NEW.guests;
-END//
-
-CREATE TRIGGER `before_booking_update` BEFORE UPDATE ON `bookings`
-FOR EACH ROW
-BEGIN
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `before_booking_update` BEFORE UPDATE ON `bookings` FOR EACH ROW BEGIN
   SET NEW.nights = DATEDIFF(NEW.checkout, NEW.checkin);
   SET NEW.total_bill = NEW.nights * (SELECT price_per_night FROM room_types WHERE id = NEW.room_type_id) * NEW.guests;
-END//
+END
+$$
 DELIMITER ;
 
--- Sample data migration for existing bookings (+ cancelled sample)
--- Sample bookings (with new fields)
-INSERT INTO `bookings` (`user_id`, `room_type_id`, `name`, `phone`, `email`, `checkin`, `checkout`, `nights`, `guests`, `payment`, `requests`, `status`, `total_bill`, `cancellation_reason`) VALUES
-(1, 1, 'Charles Umbal', '09071616515', 'charles@test.com', '2026-04-02', '2026-04-06', 4, 4, 'Cash at Check-in', 'none', 'Confirmed', 1600.00, NULL),
-(1, 1, 'Gab', '09071413515', 'gab@test.com', '2026-04-20', '2026-04-23', 3, 10, 'Credit Card', 'ywuwu', 'Confirmed', 3000.00, NULL),
-(1, 2, 'Test Customer', '09999999999', 'test@hotel.com', '2026-04-10', '2026-04-12', 2, 2, 'Credit Card', 'Early checkout requested', 'Cancelled', 1000.00, 'Guest requested refund');
-(1, 1, 'Charles Umbal', '09071616515', 'charles@test.com', '2026-04-02', '2026-04-06', 4, 4, 'Cash at Check-in', 'none', 'Confirmed', 1600.00),
-(1, 1, 'Gab', '09071413515', 'gab@test.com', '2026-04-20', '2026-04-23', 3, 10, 'Credit Card', 'ywuwu', 'Confirmed', 3000.00);
+-- --------------------------------------------------------
 
--- View for app compatibility (old room_type string)
-CREATE VIEW `bookings_view` AS
-SELECT b.*, u.name AS user_name, u.username, rt.name AS room_type_name, 
-       CONCAT(rt.name, ' - $', rt.price_per_night) AS room_type_display,
-       b.cancellation_reason, b.rebooking_reason
-FROM bookings b
-LEFT JOIN users u ON b.user_id = u.id
-LEFT JOIN room_types rt ON b.room_type_id = rt.id;
+--
+-- Stand-in structure for view `bookings_view`
+-- (See below for the actual view)
+--
+CREATE TABLE `bookings_view` (
+`id` int(11)
+,`user_id` int(11)
+,`room_type_id` int(11)
+,`name` varchar(255)
+,`phone` varchar(20)
+,`email` varchar(255)
+,`checkin` date
+,`checkout` date
+,`nights` int(11)
+,`guests` int(11)
+,`payment` varchar(50)
+,`requests` text
+,`status` enum('Pending','Confirmed','Checked-in','Checked-out','Cancelled')
+,`total_bill` decimal(10,2)
+,`created_at` timestamp
+,`user_name` varchar(100)
+,`username` varchar(50)
+,`room_type_name` varchar(50)
+,`room_type_display` varchar(64)
+);
 
--- Migration Notes:
--- 1. Backup your current DB first!
--- 2. Run this full script to recreate DB with improvements
--- 3. Update app queries to use room_type_id (1=Standard,2=Deluxe,3=Suite)
--- 4. For existing data: manually update room_type column or remap
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room_types`
+--
+
+CREATE TABLE `room_types` (
+  `id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `price_per_night` decimal(8,2) NOT NULL,
+  `max_guests` int(11) DEFAULT 4,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `room_types`
+--
+
+INSERT INTO `room_types` (`id`, `name`, `price_per_night`, `max_guests`, `description`, `created_at`) VALUES
+(1, 'Standard', 100.00, 4, 'Comfortable standard room', '2026-03-21 04:01:56'),
+(2, 'Deluxe', 250.00, 4, 'Luxury deluxe room with extra amenities', '2026-03-21 04:01:56'),
+(3, 'Suite', 500.00, 6, 'Presidential suite with full amenities', '2026-03-21 04:01:56');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('admin','customer') DEFAULT 'customer',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `username`, `email`, `phone`, `password`, `role`, `created_at`) VALUES
+(1, 'Hotel Admin', 'Admin', 'admin@hotel.com', '09000000000', 'Admin@123', 'admin', '2026-03-21 04:01:56');
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `bookings_view`
+--
+DROP TABLE IF EXISTS `bookings_view`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `bookings_view`  AS SELECT `b`.`id` AS `id`, `b`.`user_id` AS `user_id`, `b`.`room_type_id` AS `room_type_id`, `b`.`name` AS `name`, `b`.`phone` AS `phone`, `b`.`email` AS `email`, `b`.`checkin` AS `checkin`, `b`.`checkout` AS `checkout`, `b`.`nights` AS `nights`, `b`.`guests` AS `guests`, `b`.`payment` AS `payment`, `b`.`requests` AS `requests`, `b`.`status` AS `status`, `b`.`total_bill` AS `total_bill`, `b`.`created_at` AS `created_at`, `u`.`name` AS `user_name`, `u`.`username` AS `username`, `rt`.`name` AS `room_type_name`, concat(`rt`.`name`,' - $',`rt`.`price_per_night`) AS `room_type_display` FROM ((`bookings` `b` left join `users` `u` on(`b`.`user_id` = `u`.`id`)) left join `room_types` `rt` on(`b`.`room_type_id` = `rt`.`id`)) ;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `bookings`
+--
+ALTER TABLE `bookings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `room_type_id` (`room_type_id`),
+  ADD KEY `idx_name` (`name`),
+  ADD KEY `idx_checkin` (`checkin`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_user` (`user_id`),
+  ADD KEY `fk_rebooked_from` (`rebooked_from_id`);
+
+--
+-- Indexes for table `room_types`
+--
+ALTER TABLE `room_types`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_username` (`username`),
+  ADD KEY `idx_email` (`email`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `bookings`
+--
+ALTER TABLE `bookings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `room_types`
+--
+ALTER TABLE `room_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `bookings`
+--
+ALTER TABLE `bookings`
+  ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`room_type_id`) REFERENCES `room_types` (`id`),
+  ADD CONSTRAINT `fk_rebooked_from` FOREIGN KEY (`rebooked_from_id`) REFERENCES `bookings` (`id`) ON DELETE SET NULL;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

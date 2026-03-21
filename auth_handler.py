@@ -2,6 +2,9 @@ import json
 import os
 import re
 from typing import Dict, List, Optional, Tuple
+import pymysql
+import pymysql.cursors
+from migrate_users_to_db import DB_CONFIG
 
 USERS_FILE = 'users.json'
 BAD_WORDS = {'bad', 'inappropriate', 'spam'}  # Extend as needed
@@ -12,8 +15,65 @@ class AuthHandler:
         self.users: List[Dict] = self.load_users()
     
     def load_users(self) -> List[Dict]:
+        # Prefer authoritative source: try DB first and sync to users.json
+        try:
+            conn = pymysql.connect(**DB_CONFIG)
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+            cursor.execute("SELECT id, username, email, password, role, name, phone FROM users")
+            rows = cursor.fetchall()
+            conn.close()
+            users = []
+            for r in rows:
+                users.append({
+                    'id': r.get('id'),
+                    'username': r.get('username'),
+                    'email': r.get('email'),
+                    'password': r.get('password'),
+                    'role': r.get('role') or 'customer',
+                    'name': r.get('name') or '',
+                    'phone': r.get('phone') or ''
+                })
+            # Ensure there's at least one admin user; if not, add default admin and attempt DB insert
+            has_admin = any((u.get('role') or '').lower() == 'admin' or (u.get('username') or '').lower() == 'admin' for u in users)
+            if not has_admin:
+                default_admin = {
+                    'username': 'admin',
+                    'email': 'admin@hotel.com',
+                    'password': 'Admin@123',
+                    'role': 'admin',
+                    'name': 'Hotel Admin',
+                    'phone': '09000000000'
+                }
+                users.insert(0, default_admin)
+                try:
+                    # Try to insert default admin to DB so next load finds it
+                    conn2 = pymysql.connect(**DB_CONFIG)
+                    cur2 = conn2.cursor(pymysql.cursors.DictCursor)
+                    cur2.execute("SELECT id FROM users WHERE username = %s OR email = %s", (default_admin['username'], default_admin['email']))
+                    if not cur2.fetchone():
+                        try:
+                            cur2.execute("INSERT INTO users (name, username, email, phone, password, role) VALUES (%s,%s,%s,%s,%s,%s)",
+                                         (default_admin['name'], default_admin['username'], default_admin['email'], default_admin['phone'], default_admin['password'], default_admin['role']))
+                            conn2.commit()
+                        except Exception:
+                            pass
+                    conn2.close()
+                except Exception:
+                    pass
+
+            if users:
+                try:
+                    # Keep local file in sync so app behaviour remains consistent offline
+                    self.save_users(users)
+                except Exception:
+                    pass
+                return users
+        except Exception:
+            # DB not available or query failed — fall back to local file below
+            pass
+
+        # Local fallback: ensure file exists and contains at least built-in admin
         if not os.path.exists(self.users_file):
-            # Create default admin
             default_users = {
                 'users': [
                     {
@@ -29,10 +89,10 @@ class AuthHandler:
             self.save_users(default_users['users'])
             return default_users['users']
         try:
-            with open(self.users_file, 'r') as f:
+            with open(self.users_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('users', [])
-        except:
+        except Exception:
             return []
     
     def save_users(self, users: List[Dict]):
@@ -104,11 +164,95 @@ class AuthHandler:
         }
         self.users.append(user)
         self.save_users(self.users)
+        # Try to insert into DB immediately; fail quietly but log
+        try:
+            conn = pymysql.connect(**DB_CONFIG)
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+            # check existing by username or email
+            cursor.execute("SELECT id FROM users WHERE username = %s OR email = %s", (username, email))
+            row = cursor.fetchone()
+            if row:
+                cursor.execute(
+                    "UPDATE users SET name=%s, phone=%s, role=%s, password=%s WHERE id=%s",
+                    (name, cleaned_phone, user.get('role', 'customer'), password, row['id'])
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO users (name, username, email, phone, password, role) VALUES (%s,%s,%s,%s,%s,%s)",
+                    (name, username, email, cleaned_phone, password, user.get('role', 'customer'))
+                )
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"DB insert failed (registration): {e}")
         return True, 'Registered! Logged in as customer.'
     
     def login(self, username: str, password: str) -> Optional[Dict]:
+        username_norm = (username or '').strip().lower()
         for user in self.users:
-            if user['username'] == username and user['password'] == password:
+            user_username = (user.get('username') or '').strip().lower()
+            user_email = (user.get('email') or '').strip().lower()
+            user_password = user.get('password') or ''
+            # Match by username (case-insensitive) or email (case-insensitive)
+            if (username_norm == user_username or username_norm == user_email) and password == user_password:
                 return user
         return None
+
+    def delete_user(self, identifier: str) -> Tuple[bool, str]:
+        """Delete a user by username or email from the local users file.
+
+        `identifier` may be a username or an email. Returns (True, msg) when
+        deleted, (False, msg) when not found or error. Attempts to also
+        remove the DB record; DB errors are logged but do not stop the local
+        deletion.
+        """
+        identifier = (identifier or '').strip()
+        if not identifier:
+            return False, 'Empty identifier'
+
+        # Prevent deleting the built-in admin by username or admin email
+        if identifier.lower() == 'admin' or identifier.lower() == 'admin@hotel.com':
+            return False, 'Refusing to delete built-in admin'
+
+        # Try to delete from DB first (authoritative source)
+        try:
+            conn = pymysql.connect(**DB_CONFIG)
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+            cursor.execute("SELECT id, username, email FROM users WHERE username = %s OR email = %s", (identifier, identifier))
+            row = cursor.fetchone()
+            if row:
+                try:
+                    cursor.execute("DELETE FROM users WHERE id = %s", (row.get('id'),))
+                    conn.commit()
+                except Exception as e:
+                    print(f"DB delete failed (delete_user): {e}")
+                finally:
+                    conn.close()
+                # Reload authoritative list from DB and sync local file
+                try:
+                    self.users = self.load_users()
+                except Exception:
+                    pass
+                return True, f"User {row.get('username')} deleted (DB)"
+            conn.close()
+        except Exception:
+            # DB unavailable — fall back to local-file deletion
+            pass
+
+        # Local fallback removal from users.json
+        found = None
+        for u in list(self.users):
+            if u.get('username') == identifier or u.get('email') == identifier:
+                found = u
+                break
+
+        if not found:
+            return False, 'User not found'
+
+        try:
+            self.users.remove(found)
+            self.save_users(self.users)
+            return True, f"User {found.get('username')} deleted (local)"
+        except Exception as e:
+            return False, f'Local delete failed: {e}'
 

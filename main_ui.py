@@ -10,14 +10,15 @@ class Ui_MainWindow(object):
         MainWindow.resize(704, 878)
         # Global app styles: modern font and soft background gradient (Instagram-inspired accent)
         MainWindow.setStyleSheet("""
-            QWidget { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #233043; }
-            /* Soft background gradient */
-            #centralwidget { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f7f9fb, stop:1 #e6f3ff); }
-            /* Default button look - refined */
-            QPushButton { border-radius: 10px; padding: 8px 14px; font-weight: 600; }
-            /* App primary blue gradient for primary buttons */
-            QPushButton.primary { background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; }
-            QPushButton.primary:hover { filter: brightness(1.05); }
+            /* Clean minimal global styles */
+            QWidget { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #263238; }
+            #centralwidget { background: #f4f7fb; }
+            QGroupBox { background: white; border: 1px solid #e6eef6; border-radius: 8px; margin-top: 12px; }
+            QLabel#lbl_admin_title { color: #4a148c; font-size: 24px; font-weight: 700; }
+            QPushButton { background: #ffffff; border: 1px solid #d6e4ef; border-radius: 6px; padding: 6px 10px; }
+            QPushButton#btn_refresh, QPushButton#btn_confirm { background: #1976d2; color: white; border: none; }
+            QPushButton#btn_delete { background: #e53935; color: white; border: none; }
+            QLineEdit, QComboBox, QDateEdit, QSpinBox, QPlainTextEdit { background: white; border: 1px solid #e1e7ee; border-radius: 6px; padding: 6px; }
         """)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setAutoFillBackground(False)
@@ -52,9 +53,9 @@ class Ui_MainWindow(object):
         self.label.setObjectName("lbl_title")
         self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
 
-        self.pushButton_auth = QtWidgets.QPushButton(self.page_landing)
-        self.pushButton_auth.setObjectName("pushButton_auth")
-        self.gridLayout_2.addWidget(self.pushButton_auth, 1, 0, 1, 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
+        self.pushButton = QtWidgets.QPushButton(self.page_landing)
+        self.pushButton.setObjectName("pushButton")
+        self.gridLayout_2.addWidget(self.pushButton, 1, 0, 1, 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
         self.stackedWidget.addWidget(self.page_landing)
         self.page_booking = QtWidgets.QWidget()
         self.page_booking.setStyleSheet("QGroupBox {\n"
@@ -103,9 +104,7 @@ class Ui_MainWindow(object):
 "    min-height: 40px;\n"
 "    padding: 10px 20px;\n"
 "}\n"
-"QPushButton#btn_confirm:hover {\n"
-"    filter: brightness(1.05);\n"
-"}\n"
+"/* hover brightness removed for compatibility */\n"
     "\n"
     "QPushButton#btn_back {\n"
     "    background-color: transparent;\n"
@@ -234,86 +233,17 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.page_booking)
         self.page_admin = QtWidgets.QWidget()
         self.page_admin.setAutoFillBackground(False)
-        self.page_admin.setStyleSheet("QWidget#page_admin {\n"
-    "    background-color: #f6fbff;\n"
-    "}\n"
-    "\n"
-    "QTableWidget {\n"
-    "    background-color: #ffffff;\n"
-    "    border: 1px solid #e6edf3;\n"
-    "    gridline-color: #f6f9fb;\n"
-    "    border-radius: 8px;\n"
-    "    selection-background-color: #eaf6ff;\n"
-    "}\n"
-    "QTableWidget::item {\n"
-    "    padding: 8px;\n"
-    "    color: #26313b;\n"
-    "}\n"
-    "QTableWidget::item:selected {\n"
-    "    background-color: #dff3ff;\n"
-    "}\n"
-    "QTableView::item:hover {\n"
-    "    background-color: #f2fbff;\n"
-    "}\n"
-    "\n"
-    "QHeaderView::section {\n"
-    "    background-color: #2c3e50;\n"
-    "    color: white;\n"
-    "    padding: 8px;\n"
-    "    font-weight: 700;\n"
-    "    border: none;\n"
-    "    border-right: 1px solid rgba(255,255,255,0.06);\n"
-    "}\n"
-    "\n"
-    "QPushButton {\n"
-    "    border-radius: 8px;\n"
-    "    padding: 8px 14px;\n"
-    "    font-weight: 700;\n"
-    "    font-size: 13px;\n"
-    "}\n"
-            "QPushButton#btn_refresh {\n"
-"    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #4facfe, stop:1 #1f6fbf);\n"
-"    color: white;\n"
-"}\n"
-    "QPushButton#btn_refresh:hover {\n"
-    "    filter: brightness(1.05);\n"
-    "}\n"
-    "QPushButton#btn_delete {\n"
-    "    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #e74c3c, stop:1 #ff5e4d);\n"
-    "    color: white;\n"
-    "}\n"
-    "QPushButton#btn_delete:hover {\n"
-    "    filter: brightness(1.05);\n"
-    "}\n"
-    "QPushButton#btn_logout {\n"
-    "    background-color: #7f8c8d;\n"
-    "    color: white;\n"
-    "    border-radius: 8px;\n"
-    "    padding: 8px 12px;\n"
-    "}\n"
-    "QPushButton#btn_logout:hover {\n"
-    "    background-color: #95a5a6;\n"
-    "}\n"
-    "\n"
-    "QLineEdit {\n"
-    "    border: 1px solid #d6dce2;\n"
-    "    border-radius: 8px;\n"
-    "    padding: 8px;\n"
-    "    background-color: white;\n"
-    "}\n"
-    "\n"
-    "QTableWidget::item:last-child {\n"
-    "    font-weight: 700;\n"
-    "    color: #1f6fbf;\n"
-    "}\n"
-    "\n"
-    "QTableWidget::item:hover {\n"
-    "    cursor: pointer;\n"
-    "}")
+        self.page_admin.setStyleSheet(
+            "QWidget#page_admin { background: transparent; }"
+            "QTableWidget { background: white; border: none; gridline-color: #f0f3f6; }"
+            "QTableWidget::item { padding: 6px; color: #263238; }"
+            "QTableWidget::item:selected { background-color: #e8f3ff; }"
+            "QHeaderView::section { background: transparent; color: #263238; font-size: 14px; padding: 8px; font-weight: 700; border-bottom: 1px solid #e6eef6; }"
+        )
         self.page_admin.setObjectName("page_admin")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.page_admin)
-        self.verticalLayout_3.setContentsMargins(20, 20, 20, 20)
-        self.verticalLayout_3.setSpacing(15)
+        self.verticalLayout_3.setContentsMargins(18, 18, 18, 18)
+        self.verticalLayout_3.setSpacing(12)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.header_frame = QtWidgets.QFrame(self.page_admin)
         self.header_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
@@ -352,13 +282,58 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.btn_logout)
         self.verticalLayout_3.addWidget(self.header_frame)
         self.table_records = QtWidgets.QTableWidget(self.page_admin)
+        self.table_records = QtWidgets.QTableWidget(self.page_admin)
         self.table_records.setFocusPolicy(QtCore.Qt.NoFocus)
         self.table_records.setAlternatingRowColors(True)
-        self.table_records.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+        # Select entire rows (not individual cells) and allow single-row selection
+        self.table_records.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table_records.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.table_records.setShowGrid(False)
         self.table_records.setObjectName("table_records")
-        self.table_records.setColumnCount(8)
+        self.table_records.setColumnCount(9)
         self.table_records.setRowCount(0)
+        # Hide vertical row header to match desired layout
+        try:
+            self.table_records.verticalHeader().setVisible(False)
+        except Exception:
+            pass
+        # Make columns stretch to fill available space and remove small focus outline for items
+        try:
+            header = self.table_records.horizontalHeader()
+            # Prefer ResizeToContents for short columns and Stretch for name/room-type so text is readable
+            header.setMinimumSectionSize(50)
+            header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # ID
+            header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)  # Username
+            header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)          # Guest Name (main stretch)
+            header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)          # Room Type (also stretches)
+            header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents) # Guests
+            header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents) # Check-in
+            header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents) # Nights
+            header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents) # Status
+            header.setSectionResizeMode(8, QtWidgets.QHeaderView.ResizeToContents) # Total Bill
+            header.setStretchLastSection(False)
+        except Exception:
+            pass
+        try:
+            sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+            self.table_records.setSizePolicy(sizePolicy)
+            self.table_records.setMinimumWidth(0)
+        except Exception:
+            pass
+        try:
+            # Increase table font and spacing for readability and remove focus outline
+            self.table_records.setStyleSheet(
+                "QTableWidget { font-size: 14px; }"
+                "QHeaderView::section { background: transparent; color: #263238; font-size: 14px; padding: 8px; font-weight: 700; border-bottom: 1px solid #e6eef6; }"
+                "QTableWidget::item:focus { outline: none; } QTableWidget:focus { outline: none; }"
+            )
+            try:
+                # Slightly taller rows for clarity
+                self.table_records.verticalHeader().setDefaultSectionSize(30)
+            except Exception:
+                pass
+        except Exception:
+            pass
         item = QtWidgets.QTableWidgetItem()
         self.table_records.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
@@ -375,8 +350,11 @@ class Ui_MainWindow(object):
         self.table_records.setHorizontalHeaderItem(6, item)
         item = QtWidgets.QTableWidgetItem()
         self.table_records.setHorizontalHeaderItem(7, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.table_records.setHorizontalHeaderItem(8, item)
         self.table_records.horizontalHeader().setStretchLastSection(True)
-        self.verticalLayout_3.addWidget(self.table_records)
+        # Add table with stretch so it expands to fill available space
+        self.verticalLayout_3.addWidget(self.table_records, 1)
         self.footer_frame = QtWidgets.QFrame(self.page_admin)
         self.footer_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.footer_frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -398,7 +376,7 @@ class Ui_MainWindow(object):
     "\n"
     "/* REFRESH BUTTON (Hover State) */\n"
     "QPushButton#btn_refresh:hover {\n"
-    "    filter: brightness(1.05);\n"
+    "    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #3fa8ff, stop:1 #195fae);\n"
     "}\n"
     "\n"
     "/* REFRESH BUTTON (Pressed State) */\n"
@@ -482,18 +460,20 @@ class Ui_MainWindow(object):
         item = self.table_records.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "ID"))
         item = self.table_records.horizontalHeaderItem(1)
-        item.setText(_translate("MainWindow", "Guest Name"))
+        item.setText(_translate("MainWindow", "Username"))
         item = self.table_records.horizontalHeaderItem(2)
-        item.setText(_translate("MainWindow", "Room Type"))
+        item.setText(_translate("MainWindow", "Guest Name"))
         item = self.table_records.horizontalHeaderItem(3)
-        item.setText(_translate("MainWindow", "Guests"))
+        item.setText(_translate("MainWindow", "Room Type"))
         item = self.table_records.horizontalHeaderItem(4)
-        item.setText(_translate("MainWindow", "Check-in"))
+        item.setText(_translate("MainWindow", "Guests"))
         item = self.table_records.horizontalHeaderItem(5)
-        item.setText(_translate("MainWindow", "Nights"))
+        item.setText(_translate("MainWindow", "Check-in"))
         item = self.table_records.horizontalHeaderItem(6)
-        item.setText(_translate("MainWindow", "Status"))
+        item.setText(_translate("MainWindow", "Nights"))
         item = self.table_records.horizontalHeaderItem(7)
+        item.setText(_translate("MainWindow", "Status"))
+        item = self.table_records.horizontalHeaderItem(8)
         item.setText(_translate("MainWindow", "Total Bill"))
         self.btn_refresh.setText(_translate("MainWindow", "Refresh"))
         self.btn_delete.setText(_translate("MainWindow", "Delete"))
@@ -506,6 +486,8 @@ class MainWindow(QMainWindow):
         # Stub data for bookings
         self.bookings = []
         self.next_id = 1
+        # Current user (simple placeholder). Replace with real auth when integrated.
+        self.current_user = { 'username': 'guest' }
         
         # Connect signals
         self.connect_signals()
@@ -518,10 +500,18 @@ class MainWindow(QMainWindow):
         self.ui.pushButton.clicked.connect(self.show_login_dialog)
         self.ui.btn_back.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(0))
         self.ui.btn_confirm.clicked.connect(self.confirm_booking)
-        self.ui.btn_refresh.clicked.connect(self.load_records)
+        self.ui.btn_refresh.clicked.connect(self.on_refresh_clicked)
         self.ui.btn_delete.clicked.connect(self.delete_record)
         self.ui.input_search.textChanged.connect(self.filter_records)
         self.ui.btn_logout.clicked.connect(self.show_landing)
+
+    def on_refresh_clicked(self):
+        """Wrapper for refresh button to aid debugging and ensure records reload."""
+        try:
+            print("Refresh button clicked")
+            self.load_records()
+        except Exception as e:
+            print(f"Error during refresh: {e}")
 
     def show_login_dialog(self):
         """Placeholder for login (TODO: integrate auth)"""
@@ -565,6 +555,7 @@ class MainWindow(QMainWindow):
 
         booking = {
             "id": self.next_id,
+            "username": self.current_user.get('username', 'guest'),
             "name": name,
             "phone": phone,
             "email": email,
@@ -602,13 +593,14 @@ class MainWindow(QMainWindow):
             row = self.ui.table_records.rowCount()
             self.ui.table_records.insertRow(row)
             self.ui.table_records.setItem(row, 0, QtWidgets.QTableWidgetItem(str(booking["id"])))
-            self.ui.table_records.setItem(row, 1, QtWidgets.QTableWidgetItem(booking["name"]))
-            self.ui.table_records.setItem(row, 2, QtWidgets.QTableWidgetItem(booking["room_type"]))
-            self.ui.table_records.setItem(row, 3, QtWidgets.QTableWidgetItem(str(booking["guests"])))
-            self.ui.table_records.setItem(row, 4, QtWidgets.QTableWidgetItem(booking["checkin"]))
-            self.ui.table_records.setItem(row, 5, QtWidgets.QTableWidgetItem(str(booking["nights"])))
-            self.ui.table_records.setItem(row, 6, QtWidgets.QTableWidgetItem(booking["status"]))
-            self.ui.table_records.setItem(row, 7, QtWidgets.QTableWidgetItem(booking["total"]))
+            self.ui.table_records.setItem(row, 1, QtWidgets.QTableWidgetItem(booking.get("username", "guest")))
+            self.ui.table_records.setItem(row, 2, QtWidgets.QTableWidgetItem(booking["name"]))
+            self.ui.table_records.setItem(row, 3, QtWidgets.QTableWidgetItem(booking["room_type"]))
+            self.ui.table_records.setItem(row, 4, QtWidgets.QTableWidgetItem(str(booking["guests"])))
+            self.ui.table_records.setItem(row, 5, QtWidgets.QTableWidgetItem(booking["checkin"]))
+            self.ui.table_records.setItem(row, 6, QtWidgets.QTableWidgetItem(str(booking["nights"])))
+            self.ui.table_records.setItem(row, 7, QtWidgets.QTableWidgetItem(booking["status"]))
+            self.ui.table_records.setItem(row, 8, QtWidgets.QTableWidgetItem(booking["total"]))
 
     def delete_record(self):
         """Delete selected record"""
@@ -646,5 +638,5 @@ if __name__ == "__main__":
     window.show()
     sys.exit(app.exec_())
 
-# import resources_rc  # Commented out since no resources.qrc exists
+
 

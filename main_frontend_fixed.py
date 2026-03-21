@@ -3,6 +3,7 @@ import os
 from typing import Optional, Dict, Any, List
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QMessageBox, QTableWidgetItem, 
                              QInputDialog, QLineEdit)
+from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtCore import Qt, QTimer
 import pymysql
 from datetime import date, timedelta
@@ -46,16 +47,18 @@ class FrontendApp(HotelUI):
         try:
             btn = getattr(self.ui, 'pushButton_auth', None)
             if btn:
-                btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-                # stronger padding + size for accessibility
-                btn.setStyleSheet(btn.styleSheet() + "\nQPushButton#pushButton_auth { padding: 16px 36px; font-size: 16px; font-weight: 600; }")
-                # subtle drop shadow effect (QSS doesn't support shadow reliably)
                 try:
-                    shadow = QtWidgets.QGraphicsDropShadowEffect(self)
-                    shadow.setBlurRadius(18)
-                    shadow.setOffset(0, 6)
-                    shadow.setColor(QtGui.QColor(0, 0, 0, 80))
-                    btn.setGraphicsEffect(shadow)
+                    from PyQt5 import QtGui, QtWidgets, QtCore
+                    btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+                    btn.setStyleSheet(btn.styleSheet() + "\nQPushButton#pushButton_auth { padding: 16px 36px; font-size: 16px; font-weight: 600; }")
+                    try:
+                        shadow = QtWidgets.QGraphicsDropShadowEffect(self)
+                        shadow.setBlurRadius(18)
+                        shadow.setOffset(0, 6)
+                        shadow.setColor(QtGui.QColor(0, 0, 0, 80))
+                        btn.setGraphicsEffect(shadow)
+                    except Exception:
+                        pass
                 except Exception:
                     pass
         except Exception:
@@ -87,19 +90,22 @@ class FrontendApp(HotelUI):
         except Exception as e:
             print(f"Schema migration check failed: {e}")
 
+        # Guard to avoid overlapping refreshes that freeze the UI
+        self._refresh_in_progress = False
+
     def _connect_buttons(self) -> None:
         """Connect all UI buttons safely."""
         connects = [
             (self.ui.btn_confirm.clicked, self.add_booking),
             (self.ui.btn_refresh.clicked, self.refresh_table),
-(self.ui.btn_delete.clicked, self.cancel_selected_booking),
+            (self.ui.btn_delete.clicked, self.cancel_selected_booking),
             (self.ui.input_search.textChanged, self.on_search_changed),
             (self.ui.stackedWidget.currentChanged, self.on_page_changed),
             (self.ui.btn_logout.clicked, self.logout),
-(self.ui.btn_logout_admin.clicked, self.logout),
+            (self.ui.btn_logout_admin.clicked, self.logout),
             (self.ui.input_search_admin.textChanged, self.on_search_changed),
-(self.ui.btn_refresh_admin.clicked, self.refresh_table),
-(self.ui.btn_delete_admin.clicked, self.cancel_selected_booking),
+            (self.ui.btn_refresh_admin.clicked, self.refresh_table),
+            (self.ui.btn_delete_admin.clicked, self.delete_user_prompt),
             (self.ui.btn_rebook.clicked, self.rebook_selected),
             (self.ui.btn_rebook_admin.clicked, self.rebook_selected),
             (self.ui.btn_login.clicked, self.handle_login),
@@ -211,16 +217,22 @@ class FrontendApp(HotelUI):
             
             for rt in room_types:
                 available = self.check_room_availability(date_str, rt['id'])
-                display = f"{'✅' if available else '❌'} {rt['name']} - ${rt['price_per_night']}{' (Booked)' if not available else ''}"
+                display = f"{ '✅' if available else '❌' } {rt['name']} - ${rt['price_per_night']}{' (Booked)' if not available else ''}"
                 self.ui.combo_room_type.addItem(display)
                 index = self.ui.combo_room_type.count() - 1
-                self.ui.combo_room_type.model().item(index).setEnabled(available)
+                try:
+                    self.ui.combo_room_type.model().item(index).setEnabled(available)
+                except Exception:
+                    pass
             
             conn.close()
         except Exception as e:
             print(f"Update availability error: {e}")
-            self.ui.combo_room_type.clear()
-            self.ui.combo_room_type.addItems(["Standard - $100", "Deluxe - $250", "Suite - $500"])
+            try:
+                self.ui.combo_room_type.clear()
+                self.ui.combo_room_type.addItems(["Standard - $100", "Deluxe - $250", "Suite - $500"])
+            except Exception:
+                pass
 
     def on_date_changed(self, date_obj):
         """Trigger availability update on date change."""
@@ -379,61 +391,83 @@ class FrontendApp(HotelUI):
 
     def refresh_table(self):
         """Refresh bookings table - page aware."""
-        user_filter = self.current_user if self.logged_in and self.current_user.get('role') == 'customer' else None
-        current_page = self.ui.stackedWidget.currentIndex()
-        is_admin = current_page == 3
-        table = self.ui.table_records_admin if is_admin else self.ui.table_records
-        search_field = self.ui.input_search_admin if is_admin else self.ui.input_search
-        bookings = self.load_bookings(user_filter)
-        table.setRowCount(0)
-        for b in bookings:
-            row = table.rowCount()
-            table.insertRow(row)
-            cols = [str(b.get('id', ''))]
-            cols.append(b.get('name', ''))
+        # Avoid overlapping refreshes
+        if getattr(self, '_refresh_in_progress', False):
+            return
+        self._refresh_in_progress = True
+        try:
+            user_filter = self.current_user if self.logged_in and self.current_user.get('role') == 'customer' else None
+            current_page = self.ui.stackedWidget.currentIndex()
+            is_admin = current_page == 3
+            # If admin view, reload users from disk so manual edits reflect immediately
             if is_admin:
-                cols.append(b.get('phone', ''))
-            # Build a safe status display to avoid duplicate text
-            status = b.get('status', '') or ''
-            status_display = status
-            try:
-                if status == 'Cancelled' and b.get('cancellation_reason'):
-                    status_display = f"{status}\n({b.get('cancellation_reason','')[:30]}...)"
-            except Exception:
+                try:
+                    self.auth_handler.users = self.auth_handler.load_users()
+                except Exception:
+                    pass
+            table = self.ui.table_records_admin if is_admin else self.ui.table_records
+            search_field = self.ui.input_search_admin if is_admin else self.ui.input_search
+            bookings = self.load_bookings(user_filter)
+            table.setRowCount(0)
+
+            for b in bookings:
+                row = table.rowCount()
+                table.insertRow(row)
+                # For admin view include username as second column
+                if is_admin:
+                    cols = [str(b.get('id', '')), b.get('username', ''), b.get('name', ''), b.get('phone', '')]
+                else:
+                    cols = [str(b.get('id', '')), b.get('name', '')]
+
+                status = b.get('status', '') or ''
                 status_display = status
+                try:
+                    if status == 'Cancelled' and b.get('cancellation_reason'):
+                        status_display = f"{status}\\n({b.get('cancellation_reason','')[:30]}...)"
+                except Exception:
+                    status_display = status
 
-            # For admin view, make cancellation requests explicit with requesting username
+                try:
+                    if is_admin and status == 'Cancellation Requested':
+                        user_tag = b.get('username') or b.get('user_name') or ''
+                        user_part = f" by {user_tag}" if user_tag else ''
+                        status_display = f"Cancellation Requested{user_part}\\n({b.get('cancellation_reason','')[:40]}...)"
+                except Exception:
+                    pass
+
+                cols += [b.get('room_type_display', b.get('room_type', '')),
+                         str(b.get('guests', '')), str(b.get('checkin', '')),
+                         str(b.get('nights', '')), 
+                         status_display,
+                         f"${float(b.get('total_bill', 0)):.2f}"]
+                for col, val in enumerate(cols):
+                    table.setItem(row, col, QTableWidgetItem(str(val)))
+
+                # Color the Status cell as a small badge (background color)
+                try:
+                    status_text = (b.get('status') or '').strip()
+                    # Status column index depends on whether username column is present (admin view)
+                    status_idx = 8 if is_admin else 6
+                    status_item = table.item(row, status_idx)
+                    if status_item:
+                        st = status_text.lower()
+                        if st.startswith('cancel'):
+                            status_item.setBackground(QtGui.QColor('#f1948a'))
+                        elif st.startswith('cancellation requested'):
+                            status_item.setBackground(QtGui.QColor('#f7dc6f'))
+                        elif st.startswith('confirmed'):
+                            status_item.setBackground(QtGui.QColor('#abebc6'))
+                        else:
+                            status_item.setBackground(QtGui.QColor('#d5dbdb'))
+                except Exception:
+                    pass
+
             try:
-                if is_admin and status == 'Cancellation Requested':
-                    user_tag = b.get('username') or b.get('user_name') or ''
-                    user_part = f" by {user_tag}" if user_tag else ''
-                    status_display = f"Cancellation Requested{user_part}\n({b.get('cancellation_reason','')[:40]}...)"
+                table.resizeColumnsToContents()
             except Exception:
                 pass
-
-            cols += [b.get('room_type_display', b.get('room_type', '')),
-                     str(b.get('guests', '')), str(b.get('checkin', '')),
-                     str(b.get('nights', '')), 
-                     status_display,
-                     f"${float(b.get('total_bill', 0)):.2f}"]
-            for col, val in enumerate(cols):
-                table.setItem(row, col, QTableWidgetItem(str(val)))
-            # Color the Status cell as a small badge (background color)
-            try:
-                status_text = (b.get('status') or '').strip()
-                status_item = table.item(row, 6)  # Status column index
-                if status_item:
-                    if status_text.lower().startswith('cancel'):
-                        status_item.setBackground(QtGui.QColor('#f1948a'))
-                    elif status_text.lower().startswith('cancellation requested') or status_text.lower().startswith('cancellation requested'):
-                        status_item.setBackground(QtGui.QColor('#f7dc6f'))
-                    elif status_text.lower().startswith('confirmed'):
-                        status_item.setBackground(QtGui.QColor('#abebc6'))
-                    else:
-                        status_item.setBackground(QtGui.QColor('#d5dbdb'))
-            except Exception:
-                pass
-            table.resizeColumnsToContents()
+        finally:
+            self._refresh_in_progress = False
 
     # Placeholder for missing methods - expand with original full implementations
     def cancel_selected_booking(self):
@@ -508,6 +542,46 @@ class FrontendApp(HotelUI):
             else:
                 return QMessageBox.warning(self, "Cancelled", "No reason provided.")
 
+    def delete_user_prompt(self):
+        """Prompt admin to delete a user from local users.json and (if present) remove from DB."""
+        if not self.logged_in or not self.current_user or self.current_user.get('role') != 'admin':
+            return QMessageBox.warning(self, "Access Denied", "Only admin can delete users.")
+
+        username, ok = QtWidgets.QInputDialog.getText(self, 'Delete User', 'Enter username to delete:')
+        if not ok or not username.strip():
+            return
+
+        username = username.strip()
+        reply = QMessageBox.question(self, 'Confirm Delete', f"Delete user '{username}'? This cannot be undone.", QMessageBox.Yes | QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
+        success, msg = self.auth_handler.delete_user(username)
+        if success:
+            # Optionally remove from DB as well
+            try:
+                conn, cursor = self.get_db_connection()
+                if conn:
+                    try:
+                        cursor.execute("DELETE FROM users WHERE username = %s OR email = %s", (username, username))
+                    except Exception:
+                        pass
+                    conn.close()
+            except Exception:
+                pass
+            # Reload local users and refresh admin table so UI updates immediately
+            try:
+                self.auth_handler.users = self.auth_handler.load_users()
+            except Exception:
+                pass
+            try:
+                self.refresh_table()
+            except Exception:
+                pass
+            QMessageBox.information(self, 'Deleted', msg)
+        else:
+            QMessageBox.warning(self, 'Delete Failed', msg)
+
     def update_action_buttons(self):
         """Enable/disable booking action buttons based on ownership and selection."""
         try:
@@ -537,11 +611,10 @@ class FrontendApp(HotelUI):
                 return
             try:
                 cursor.execute("SELECT user_id, status FROM bookings WHERE id = %s", (booking_id,))
-                row = cursor.fetchone()
-                row = cursor.fetchone()
-                owner_id = row.get('user_id') if row else None
-                status = row.get('status') if row else None
-                print(f"update_action_buttons: booking_id={booking_id} db_row_exists={bool(row)} status={status}")
+                db_row = cursor.fetchone()
+                owner_id = db_row.get('user_id') if db_row else None
+                status = db_row.get('status') if db_row else None
+                print(f"update_action_buttons: booking_id={booking_id} db_row_exists={bool(db_row)} status={status}")
             finally:
                 conn.close()
 
@@ -610,37 +683,7 @@ class FrontendApp(HotelUI):
                     self.ui.input_phone.setText(booking['phone'] or '')
                 if hasattr(self.ui, 'input_email'):
                     self.ui.input_email.setText(booking['email'] or '')
-                self.ui.spin_guests.setValue(booking.get('guests') or 1)
-                # Robust parsing of booking date fields (they may be str, date, or datetime)
-                def _parse_booking_date(val):
-                    if isinstance(val, str):
-                        try:
-                            return date.fromisoformat(val)
-                        except Exception:
-                            pass
-                    if isinstance(val, date):
-                        return val
-                    try:
-                        if isinstance(val, datetime.datetime):
-                            return val.date()
-                    except Exception:
-                        pass
-                    try:
-                        return date.fromisoformat(str(val))
-                    except Exception:
-                        return date.today()
-
-                checkin_dt = _parse_booking_date(booking.get('checkin'))
-                checkout_dt = _parse_booking_date(booking.get('checkout'))
-                try:
-                    self.ui.date_checkin.setDate(checkin_dt)
-                    self.ui.date_checkout.setDate(checkout_dt)
-                except Exception:
-                    # If setDate fails, silently continue — user can still edit dates
-                    pass
-                
                 self.pending_rebook = {'from_id': booking_id, 'reason': reason}
-                # Switch to booking form so user can adjust and confirm the rebook
                 try:
                     self.ui.stackedWidget.setCurrentIndex(2)
                 except Exception:
@@ -734,13 +777,14 @@ class FrontendApp(HotelUI):
         conn, cursor = self.get_db_connection()
         if not conn:
             return QMessageBox.critical(self, "DB Error", "Cannot connect to database.")
+
         try:
             cursor.execute("SELECT status, cancellation_reason FROM bookings WHERE id = %s", (booking_id,))
-            rowdata = cursor.fetchone()
             rowdata = cursor.fetchone()
             status = rowdata.get('status') if rowdata else None
             reason = rowdata.get('cancellation_reason') if rowdata else ''
             print(f"approve_selected_cancellation: booking_id={booking_id} db_row_exists={bool(rowdata)} status={status}")
+
             if status != 'Cancellation Requested':
                 return QMessageBox.information(self, "Not Pending", f"Booking {booking_id} is not a cancellation request (status: {status}).")
 
@@ -791,6 +835,13 @@ class FrontendApp(HotelUI):
                 if user['role'] == 'admin':
                     self.ui.stackedWidget.setCurrentIndex(3)
                     self.refresh_table()
+                    # Reveal admin user-management action
+                    try:
+                        if getattr(self.ui, 'btn_delete_admin', None):
+                            self.ui.btn_delete_admin.setText('Delete User')
+                            self.ui.btn_delete_admin.show()
+                    except Exception:
+                        pass
                 else:
                     self.ui.stackedWidget.setCurrentIndex(2)
                     self.populate_customer_info()
@@ -799,7 +850,6 @@ class FrontendApp(HotelUI):
                     self.update_action_buttons()
                 except Exception:
                     pass
-                QMessageBox.information(self, "Welcome", f"Hi, {user['name']}! ({user['role'].title()})")
             else:
                 self.ui.input_login_user.clear()
                 self.ui.input_login_pw.clear()
@@ -894,7 +944,16 @@ class FrontendApp(HotelUI):
 
     def on_page_changed(self, idx: int):
         """Page change security."""
-        pass  # Full impl in original
+        # When switching to admin page, ensure users are reloaded and tables refreshed
+        try:
+            if idx == 3:
+                try:
+                    self.auth_handler.users = self.auth_handler.load_users()
+                except Exception:
+                    pass
+                self.refresh_table()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
