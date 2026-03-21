@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 21, 2026 at 10:48 AM
+-- Generation Time: Mar 21, 2026 at 11:14 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -47,17 +47,6 @@ CREATE TABLE `bookings` (
   `rebooked_from_id` int(11) DEFAULT NULL,
   `rebooking_reason` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `bookings`
---
-
-INSERT INTO `bookings` (`id`, `user_id`, `room_type_id`, `name`, `phone`, `email`, `checkin`, `checkout`, `nights`, `guests`, `payment`, `requests`, `status`, `total_bill`, `created_at`, `cancellation_reason`, `rebooked_from_id`, `rebooking_reason`) VALUES
-(1, 1, 1, 'Charles Umbal', '09071616515', 'charles@test.com', '2026-04-02', '2026-04-06', 4, 4, 'Cash at Check-in', 'none', 'Confirmed', 1600.00, '2026-03-21 04:01:56', NULL, NULL, NULL),
-(2, 1, 1, 'Gab', '09071413515', 'gab@test.com', '2026-04-20', '2026-04-23', 3, 10, 'Credit Card', 'ywuwu', 'Confirmed', 3000.00, '2026-03-21 04:01:56', NULL, NULL, NULL),
-(4, NULL, 2, 'Mark Julius', '09081515313', 'mark@test.com', '2026-03-21', '2026-03-24', 3, 5, 'Cash at Check-in', 'eme', 'Cancelled', 3750.00, '2026-03-21 04:30:50', 'cancelll', NULL, NULL),
-(5, NULL, 3, 'Vinzii Hanzi', '09761414212', 'vinci@test.com', '2026-04-21', '2026-04-24', 3, 1, 'Cash at Check-in', 'emeee', 'Confirmed', 1500.00, '2026-03-21 08:04:00', NULL, NULL, NULL),
-(6, NULL, 1, 'Vinzii Hanzi', '09761414212', 'vinci@test.com', '2026-04-15', '2026-04-16', 1, 1, 'Cash at Check-in', 'faeaef', '', 100.00, '2026-03-21 08:13:58', 'ayoko na', 5, 'rebook');
 
 --
 -- Triggers `bookings`
