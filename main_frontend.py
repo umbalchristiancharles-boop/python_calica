@@ -37,13 +37,11 @@ class FrontendApp(HotelUI):
         self.auth_handler = AuthHandler()
         self.current_user: Optional[Dict[str, str]] = None
         
-        # Landing page connects
         try:
             self.ui.pushButton_auth.clicked.connect(self.show_auth_page)
             print("Auth landing connect OK")
         except AttributeError as e:
             print(f"Landing connect skipped: {e}")
-        # Enhance landing button interactivity and appearance at runtime
         try:
             btn = getattr(self.ui, 'pushButton_auth', None)
             if btn:
@@ -64,10 +62,8 @@ class FrontendApp(HotelUI):
         except Exception:
             pass
         
-        # Other connects
         self._connect_buttons()
         
-        # Set default dates and connect availability
         try:
             self.ui.date_checkin.setDate(date.today())
             self.ui.date_checkout.setDate(date.today() + timedelta(days=3))
@@ -75,7 +71,6 @@ class FrontendApp(HotelUI):
         except AttributeError:
             pass
 
-        # Auto-refresh timer: refresh bookings table periodically when relevant page is active
         try:
             self.auto_refresh_timer = QTimer(self)
             self.auto_refresh_timer.setInterval(5000)  # 5 seconds
@@ -83,14 +78,11 @@ class FrontendApp(HotelUI):
             self.auto_refresh_timer.start()
         except Exception:
             pass
-
-        # Ensure DB schema has expected columns (self-healing migration)
         try:
             self.ensure_booking_columns()
         except Exception as e:
             print(f"Schema migration check failed: {e}")
 
-        # Guard to avoid overlapping refreshes that freeze the UI
         self._refresh_in_progress = False
 
     def _connect_buttons(self) -> None:
@@ -118,8 +110,6 @@ class FrontendApp(HotelUI):
                 signal.connect(slot)
             except AttributeError:
                 print(f"Connect skipped: {signal}")
-        # No approve button to connect (removed from UI)
-        # Connect selection change to update action buttons when tables exist
         try:
             self.ui.table_records.itemSelectionChanged.connect(self.update_action_buttons)
         except Exception:
@@ -128,12 +118,10 @@ class FrontendApp(HotelUI):
             self.ui.table_records_admin.itemSelectionChanged.connect(self.update_action_buttons)
         except Exception:
             pass
-        # Double click shows booking details (customer panel)
         try:
             self.ui.table_records.itemDoubleClicked.connect(self.show_booking_details)
         except Exception:
             pass
-        # No client-side approve button; admin approvals handled server-side
 
     def get_db_connection(self):
         """Get PyMySQL connection."""
@@ -150,7 +138,6 @@ class FrontendApp(HotelUI):
         if not conn:
             return
         try:
-            # Check and add rebooked_from_id
             cursor.execute("""
                 SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_SCHEMA = %s AND TABLE_NAME = 'bookings' AND COLUMN_NAME = 'rebooked_from_id'
@@ -167,7 +154,6 @@ class FrontendApp(HotelUI):
                     pass
                 print("Added missing column rebooked_from_id to bookings table.")
 
-            # Check and add rebooking_reason
             cursor.execute("""
                 SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_SCHEMA = %s AND TABLE_NAME = 'bookings' AND COLUMN_NAME = 'rebooking_reason'
@@ -186,7 +172,7 @@ class FrontendApp(HotelUI):
         """Check if room_type_id is available on given date (no overlapping bookings)."""
         conn, cursor = self.get_db_connection()
         if not conn:
-            return True  # Offline fallback
+            return True  
         try:
             cursor.execute("""
                 SELECT id FROM bookings 
@@ -246,7 +232,7 @@ class FrontendApp(HotelUI):
         """Called by QTimer periodically; refresh table only when booking/admin pages are visible."""
         try:
             current_page = self.ui.stackedWidget.currentIndex()
-            # customer page is 2, admin is 3
+          
             if current_page in (2, 3):
                 self.refresh_table()
         except Exception:
@@ -260,7 +246,6 @@ class FrontendApp(HotelUI):
         try:
             search = self.ui.input_search.text() if hasattr(self.ui, 'input_search') else ''
             if user_filter and user_filter.get('role') == 'customer':
-                # Filter bookings by the user's DB id to avoid exposing others' data
                 user_id = user_filter.get('id')
                 base_query = "SELECT * FROM bookings WHERE user_id = %s"
                 base_params = (user_id,)
@@ -328,9 +313,7 @@ class FrontendApp(HotelUI):
                 return
 
             user_id = self.current_user.get('id') if self.current_user and 'id' in self.current_user else None
-            # Handle rebook
             if hasattr(self, 'pending_rebook'):
-                # Backend ownership check for rebook: ensure current user owns original booking (unless admin)
                 try:
                     conn_check, cursor_check = self.get_db_connection()
                     if conn_check:
@@ -341,7 +324,6 @@ class FrontendApp(HotelUI):
                         if not (self.logged_in and (self.current_user and self.current_user.get('role') == 'admin' or orig_owner == (self.current_user.get('id') if self.current_user else None))):
                             return QMessageBox.warning(self, "Access Denied", "You are not allowed to rebook this reservation")
                 except Exception:
-                    # If ownership check cannot be completed, block for safety
                     return QMessageBox.warning(self, "Access Denied", "Unable to validate rebook ownership")
 
                 cursor.execute("""
@@ -391,7 +373,6 @@ class FrontendApp(HotelUI):
 
     def refresh_table(self):
         """Refresh bookings table - page aware."""
-        # Avoid overlapping refreshes
         if getattr(self, '_refresh_in_progress', False):
             return
         self._refresh_in_progress = True
@@ -399,7 +380,6 @@ class FrontendApp(HotelUI):
             user_filter = self.current_user if self.logged_in and self.current_user.get('role') == 'customer' else None
             current_page = self.ui.stackedWidget.currentIndex()
             is_admin = current_page == 3
-            # If admin view, reload users from disk so manual edits reflect immediately
             if is_admin:
                 try:
                     self.auth_handler.users = self.auth_handler.load_users()
@@ -413,7 +393,6 @@ class FrontendApp(HotelUI):
             for b in bookings:
                 row = table.rowCount()
                 table.insertRow(row)
-                # For admin view include username as second column
                 if is_admin:
                     cols = [str(b.get('id', '')), b.get('username', ''), b.get('name', ''), b.get('phone', '')]
                 else:
@@ -442,11 +421,8 @@ class FrontendApp(HotelUI):
                          f"${float(b.get('total_bill', 0)):.2f}"]
                 for col, val in enumerate(cols):
                     table.setItem(row, col, QTableWidgetItem(str(val)))
-
-                # Color the Status cell as a small badge (background color)
                 try:
                     status_text = (b.get('status') or '').strip()
-                    # Status column index depends on whether username column is present (admin view)
                     status_idx = 8 if is_admin else 6
                     status_item = table.item(row, status_idx)
                     if status_item:
@@ -469,7 +445,6 @@ class FrontendApp(HotelUI):
         finally:
             self._refresh_in_progress = False
 
-    # Placeholder for missing methods - expand with original full implementations
     def cancel_selected_booking(self):
         """Cancel selected booking (mark as Cancelled + reason)."""
         current_page = self.ui.stackedWidget.currentIndex()
@@ -481,7 +456,6 @@ class FrontendApp(HotelUI):
         
         row = selection[0].row()
         booking_id = int(table.item(row, 0).text())
-        # Safety: check current status to prevent duplicate cancels
         conn_check, cursor_check = self.get_db_connection()
         if not conn_check:
             return QMessageBox.warning(self, "DB Error", "Cannot connect to database.")
@@ -503,7 +477,6 @@ class FrontendApp(HotelUI):
                 conn, cursor = self.get_db_connection()
                 if conn:
                     try:
-                        # Security check: verify ownership on the backend before updating
                         cursor.execute("SELECT user_id FROM bookings WHERE id = %s", (booking_id,))
                         row = cursor.fetchone()
                         owner_id = row.get('user_id') if row else None
@@ -512,7 +485,6 @@ class FrontendApp(HotelUI):
                                 return QMessageBox.warning(self, "Access Denied", "You are not allowed to modify this booking")
 
                         if not is_admin:
-                            # For customers: create a cancellation request instead of immediate cancel
                             try:
                                 cursor.execute("UPDATE bookings SET status = 'Cancellation Requested', cancellation_reason = %s WHERE id = %s", (reason, booking_id))
                             except pymysql.err.InternalError as ie:
@@ -523,7 +495,6 @@ class FrontendApp(HotelUI):
                             self.refresh_table()
                             QMessageBox.information(self, "Requested", f"Cancellation requested for booking {booking_id}. Awaiting admin approval.")
                         else:
-                            # Admin: remove booking from DB so it disappears from lists
                             try:
                                 cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
                             except Exception as e:
@@ -556,7 +527,6 @@ class FrontendApp(HotelUI):
 
         success, msg = self.auth_handler.delete_user(username)
         if success:
-            # Optionally remove from DB as well
             try:
                 conn, cursor = self.get_db_connection()
                 if conn:
@@ -567,7 +537,6 @@ class FrontendApp(HotelUI):
                     conn.close()
             except Exception:
                 pass
-            # Reload local users and refresh admin table so UI updates immediately
             try:
                 self.auth_handler.users = self.auth_handler.load_users()
             except Exception:
@@ -587,7 +556,6 @@ class FrontendApp(HotelUI):
             is_admin = current_page == 3
             table = self.ui.table_records_admin if is_admin else self.ui.table_records
             selected = table.selectedItems()
-            # Default disable
             for btn in [getattr(self.ui, 'btn_delete', None), getattr(self.ui, 'btn_rebook', None)]:
                 try:
                     if btn:
@@ -616,7 +584,6 @@ class FrontendApp(HotelUI):
             finally:
                 conn.close()
 
-            # Admin view: enable admin action buttons based on status
             if is_admin:
                 try:
                     admin_blocked = ['Cancelled', 'Cancellation Approved', 'Checked-in', 'Checked-out']
@@ -629,10 +596,7 @@ class FrontendApp(HotelUI):
                     pass
                 return
 
-            # For customer view: enable only if logged in and owner
             is_owner = self.logged_in and self.current_user and owner_id == self.current_user.get('id')
-            # Do not allow cancelling/re-requesting if already processed or pending
-            # 'Confirmed' should be cancellable by customers (it means active booking)
             processed_statuses = ['Cancelled', 'Cancellation Approved', 'Checked-in', 'Checked-out']
             is_pending = status == 'Cancellation Requested'
             can_cancel = is_owner and (status not in processed_statuses) and (not is_pending)
@@ -667,7 +631,6 @@ class FrontendApp(HotelUI):
         if not booking:
             return QMessageBox.warning(self, "Error", "Booking not found.")
         
-        # Validation
         if self.logged_in and self.current_user.get('role') == 'customer' and booking['user_id'] != self.current_user.get('id'):
             return QMessageBox.warning(self, "Access Denied", "Only your own bookings.")
         
@@ -676,7 +639,6 @@ class FrontendApp(HotelUI):
         if reply == QMessageBox.Yes:
             reason, ok = QInputDialog.getText(self, 'Rebooking Reason', 'Reason (required):')
             if ok and reason.strip():
-                # Prefill form
                 self.ui.input_name.setText(booking['name'])
                 if hasattr(self.ui, 'input_phone'):
                     self.ui.input_phone.setText(booking['phone'] or '')
@@ -714,14 +676,12 @@ class FrontendApp(HotelUI):
         if not booking:
             return QMessageBox.warning(self, "Error", "Booking not found.")
 
-        # Populate form fields for quick view/edit (do not change ownership)
         try:
             self.ui.input_name.setText(booking.get('name',''))
             if hasattr(self.ui, 'input_phone'):
                 self.ui.input_phone.setText(booking.get('phone','') or '')
             if hasattr(self.ui, 'input_email'):
                 self.ui.input_email.setText(booking.get('email','') or '')
-            # Parse and set dates safely
             def _parse_booking_date(val):
                 try:
                     if isinstance(val, str):
@@ -744,12 +704,10 @@ class FrontendApp(HotelUI):
                 self.ui.date_checkout.setDate(checkout_dt)
             except Exception:
                 pass
-            # Scroll to booking on the table and ensure selection
             try:
                 self.ui.table_records.selectRow(row)
             except Exception:
                 pass
-            # Switch to booking form page if not already
             try:
                 self.ui.stackedWidget.setCurrentIndex(2)
             except Exception:
@@ -759,7 +717,6 @@ class FrontendApp(HotelUI):
 
     def approve_selected_cancellation(self):
         print("approve_selected_cancellation called")
-        # Approve the selected cancellation request (admin action)
         current_page = self.ui.stackedWidget.currentIndex()
         if current_page != 3:
             return QMessageBox.warning(self, "Not Admin", "Approve action is only available in Admin view.")
@@ -790,8 +747,6 @@ class FrontendApp(HotelUI):
             reply = QMessageBox.question(self, 'Approve Cancellation', f'Approve cancellation for booking {booking_id}?', QMessageBox.Yes | QMessageBox.No)
             if reply != QMessageBox.Yes:
                 return
-
-            # Mark as Cancelled and keep reason
             try:
                 cursor.execute("UPDATE bookings SET status = 'Cancelled' WHERE id = %s", (booking_id,))
             except Exception as e:
@@ -825,7 +780,6 @@ class FrontendApp(HotelUI):
 
             user = self.auth_handler.login(username, password)
             if user:
-                # Sync to DB and attach ID
                 self._sync_user_to_db(user)
                 self.current_user = user
                 self.logged_in = True
@@ -834,7 +788,6 @@ class FrontendApp(HotelUI):
                 if user['role'] == 'admin':
                     self.ui.stackedWidget.setCurrentIndex(3)
                     self.refresh_table()
-                    # Reveal admin user-management action
                     try:
                         if getattr(self.ui, 'btn_delete_admin', None):
                             self.ui.btn_delete_admin.setText('Delete Booking')
@@ -844,7 +797,6 @@ class FrontendApp(HotelUI):
                 else:
                     self.ui.stackedWidget.setCurrentIndex(2)
                     self.populate_customer_info()
-                # Ensure action buttons reflect ownership state
                 try:
                     self.update_action_buttons()
                 except Exception:
@@ -885,7 +837,7 @@ class FrontendApp(HotelUI):
                 user['id'] = row.get('id')
             conn.close()
         except Exception:
-            pass  # Non-fatal
+            pass 
 
     def handle_register(self):
         '''Handle user registration.'''
@@ -943,7 +895,6 @@ class FrontendApp(HotelUI):
 
     def on_page_changed(self, idx: int):
         """Page change security."""
-        # When switching to admin page, ensure users are reloaded and tables refreshed
         try:
             if idx == 3:
                 try:

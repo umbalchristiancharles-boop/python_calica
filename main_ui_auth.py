@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if hasattr(self, 'centralwidget'):
-            return  # Already setup
+            return 
         
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1100, 800)
@@ -42,19 +42,15 @@ class Ui_MainWindow(object):
         title.setStyleSheet("color: #2c3e50; margin: 40px; padding: 20px;")
         title.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(title)
-        
-        # Place the Login/Register button directly on the landing background
         self.pushButton_auth = QtWidgets.QPushButton("Login / Register")
         self.pushButton_auth.setObjectName("pushButton_auth")
         self.pushButton_auth.setProperty('class', 'primary')
         self.pushButton_auth.setFont(QtGui.QFont("Segoe UI", 14))
-        # Use the primary class defined in main UI stylesheet (Instagram-like gradient)
         self.pushButton_auth.setStyleSheet("QPushButton.primary { min-width: 360px; min-height: 64px; border-radius: 14px; }")
         self.pushButton_auth.setMinimumHeight(64)
         self.pushButton_auth.setMinimumWidth(360)
         self.pushButton_auth.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.pushButton_auth.setCursor(QtCore.Qt.PointingHandCursor)
-        # Add subtle drop shadow to the landing button for depth
         try:
             shadow_btn = QtWidgets.QGraphicsDropShadowEffect()
             shadow_btn.setBlurRadius(24)
@@ -64,7 +60,6 @@ class Ui_MainWindow(object):
         except Exception:
             pass
 
-        # add spacing to separate title and button, then add button centered
         layout.addSpacing(20)
         layout.addWidget(self.pushButton_auth, alignment=QtCore.Qt.AlignCenter)
         self.stackedWidget.addWidget(self.page_landing)
@@ -74,10 +69,8 @@ class Ui_MainWindow(object):
         self.page_auth = QtWidgets.QWidget()
         self.page_auth.setObjectName("page_auth")
         layout = QtWidgets.QVBoxLayout(self.page_auth)
-        # reduce side margins so content sits closer to center and not too inset
         layout.setContentsMargins(60, 40, 60, 40)
         layout.setSpacing(20)
-        # center contents both horizontally and vertically
         try:
             layout.setAlignment(QtCore.Qt.AlignCenter)
         except Exception:
@@ -85,7 +78,6 @@ class Ui_MainWindow(object):
         
         frame = QtWidgets.QFrame()
         frame.setMaximumWidth(520)
-        # Subtle white card used for the auth content, with gentle rounding
         frame.setStyleSheet("""
             background: qlineargradient(to bottom, white, #fbfdff);
             border-radius: 14px; border: none;
@@ -111,7 +103,6 @@ class Ui_MainWindow(object):
                 color: #999999;
             }
         """)
-        # Add drop shadow to auth card for a floating, modern look
         try:
             card_shadow = QtWidgets.QGraphicsDropShadowEffect()
             card_shadow.setBlurRadius(24)
@@ -193,7 +184,6 @@ class Ui_MainWindow(object):
         self.btn_back_auth.setObjectName("btn_back_auth")
         frame_layout.addWidget(self.btn_back_auth)
         
-        # Add stretchers so the frame is vertically centered in the page
         try:
             layout.addStretch(1)
             layout.addWidget(frame, alignment=QtCore.Qt.AlignCenter)
@@ -209,7 +199,6 @@ class Ui_MainWindow(object):
         layout = QtWidgets.QGridLayout(self.page_booking)
         layout.setSpacing(18)
         
-        # Form left
         form_frame = QtWidgets.QFrame()
         form_layout = QtWidgets.QFormLayout(form_frame)
         form_layout.setHorizontalSpacing(24)
@@ -264,7 +253,6 @@ class Ui_MainWindow(object):
         self.btn_confirm.setStyleSheet("background: qlineargradient(spread:pad, x1:0,y1:0,x2:1,y2:0, stop:0 #4facfe, stop:1 #1f6fbf); color: white; font-size: 16px; padding: 12px; border-radius:8px; font-weight:700;")
         form_layout.addRow(self.btn_confirm)
 
-        # Slightly larger fonts for readability in the form
         try:
             font = QtGui.QFont()
             font.setPointSize(10)
@@ -274,7 +262,6 @@ class Ui_MainWindow(object):
         
         layout.addWidget(form_frame, 0, 0)
         
-        # Table right
         table_frame = QtWidgets.QFrame()
         table_layout = QtWidgets.QVBoxLayout(table_frame)
         
@@ -296,16 +283,13 @@ class Ui_MainWindow(object):
         self.table_records.setColumnCount(8)
         self.table_records.setHorizontalHeaderLabels(["ID", "Name", "Room", "Guests", "Check-in", "Nights", "Status", "Total"])
         self.table_records.setObjectName("table_records")
-        # Improve table readability and selection
         try:
             self.table_records.setAlternatingRowColors(True)
             self.table_records.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             self.table_records.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-            # Slightly larger table font
             tbl_font = QtGui.QFont()
             tbl_font.setPointSize(10)
             self.table_records.setFont(tbl_font)
-            # Modern visual styles for table and header
             self.table_records.setStyleSheet("""
                 QTableWidget { background: #ffffff; border: 1px solid #e6edf3; gridline-color: #f6f9fb; }
                 QHeaderView::section { background: #f5f7fa; color: #263238; padding: 6px; font-weight: 700; border-bottom: 1px solid #e6eef6; }
@@ -313,11 +297,9 @@ class Ui_MainWindow(object):
                 QTableWidget::item:selected { background: #e8f3ff; color: #17202a; }
                 QTableWidget::item:hover { background: #f6fbff; }
             """)
-            # Header behavior: center labels and use smart resize modes
             header = self.table_records.horizontalHeader()
             header.setDefaultAlignment(QtCore.Qt.AlignCenter)
             try:
-                # Explicit per-column resize modes for predictable layout
                 header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # ID
                 header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)           # Name
                 header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)           # Room
@@ -328,15 +310,13 @@ class Ui_MainWindow(object):
                 header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)  # Total
             except Exception:
                 pass
-            # Consistent row height for readability
             self.table_records.verticalHeader().setDefaultSectionSize(28)
         except Exception:
             pass
         table_layout.addWidget(self.table_records)
         
-        self.btn_delete = QtWidgets.QPushButton("❌ Cancel Selected")
+        self.btn_delete = QtWidgets.QPushButton("Cancel Selected")
         self.btn_delete.setObjectName("btn_delete")
-        # Make action buttons full-width and consistent
         try:
             self.btn_delete.setMinimumHeight(36)
             self.btn_delete.setStyleSheet("background-color: #e74c3c; color: white; border-radius: 6px;")
@@ -344,7 +324,7 @@ class Ui_MainWindow(object):
             pass
         table_layout.addWidget(self.btn_delete)
         
-        self.btn_rebook = QtWidgets.QPushButton("🔄 Rebook Selected")
+        self.btn_rebook = QtWidgets.QPushButton("Rebook Selected")
         self.btn_rebook.setObjectName("btn_rebook")
         self.btn_rebook.setStyleSheet("""
             QPushButton#btn_rebook {
@@ -387,7 +367,6 @@ class Ui_MainWindow(object):
         title.setStyleSheet("color: #8e44ad; margin: 20px;")
         layout.addWidget(title)
         
-        # Reuse similar table/search from booking
         h_layout = QtWidgets.QHBoxLayout()
         self.input_search_admin = QtWidgets.QLineEdit(placeholderText="Admin search...")
         self.input_search_admin.setObjectName("input_search_admin")
@@ -403,10 +382,8 @@ class Ui_MainWindow(object):
         
         self.table_records_admin = QtWidgets.QTableWidget()
         self.table_records_admin.setColumnCount(10)
-        # Add Username column (index 1) so admin can see which account made the booking
         self.table_records_admin.setHorizontalHeaderLabels(["ID", "Username", "Name", "Phone", "Room", "Guests", "Check-in", "Nights", "Status", "Total"])
         self.table_records_admin.setObjectName("table_records_admin")
-        # Improve admin table visuals to match booking table
         try:
             self.table_records_admin.setAlternatingRowColors(True)
             self.table_records_admin.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -424,7 +401,6 @@ class Ui_MainWindow(object):
             header_adm = self.table_records_admin.horizontalHeader()
             header_adm.setDefaultAlignment(QtCore.Qt.AlignCenter)
             try:
-                # Admin table: specify per-column sizing for clarity
                 header_adm.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # ID
                 header_adm.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)  # Username
                 header_adm.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)           # Name
@@ -440,7 +416,6 @@ class Ui_MainWindow(object):
             self.table_records_admin.verticalHeader().setDefaultSectionSize(28)
         except Exception:
             pass
-        # Wrap admin table in a light card to improve visual separation
         try:
             table_card = QtWidgets.QFrame()
             table_card.setStyleSheet("background: white; border-radius: 10px; border: 1px solid #e6edf3; padding: 8px;")
@@ -451,7 +426,6 @@ class Ui_MainWindow(object):
         except Exception:
             layout.addWidget(self.table_records_admin)
 
-        # Add styling for logout button to match admin theming
         try:
             self.btn_logout_admin.setStyleSheet("QPushButton { background: #7f8c8d; color: white; border-radius: 8px; padding: 8px 14px; font-weight:700; } QPushButton:hover { background:#95a5a6; }")
             self.btn_refresh_admin.setCursor(QtCore.Qt.PointingHandCursor)
@@ -460,15 +434,14 @@ class Ui_MainWindow(object):
             pass
         
         btn_layout = QtWidgets.QHBoxLayout()
-        self.btn_delete_admin = QtWidgets.QPushButton("❌ Cancel Selected")
+        self.btn_delete_admin = QtWidgets.QPushButton("Cancel Selected")
         btn_layout.addWidget(self.btn_delete_admin)
-        # Hide admin cancel button per request (keep attribute for backend logic)
         try:
             self.btn_delete_admin.hide()
         except Exception:
             pass
 
-        self.btn_rebook_admin = QtWidgets.QPushButton("🔄 Rebook Selected")
+        self.btn_rebook_admin = QtWidgets.QPushButton("Rebook Selected")
         self.btn_rebook_admin.setObjectName("btn_rebook_admin")
         self.btn_rebook_admin.setStyleSheet("""
             QPushButton#btn_rebook_admin {

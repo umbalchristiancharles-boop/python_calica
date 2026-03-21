@@ -9,7 +9,6 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(704, 878)
-        # Global app styles: modern font and soft background gradient (Instagram-inspired accent)
         MainWindow.setStyleSheet("""
             /* Clean minimal global styles */
             QWidget { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #263238; }
@@ -39,12 +38,10 @@ class Ui_MainWindow(object):
         self.page_landing.setObjectName("page_landing")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.page_landing)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        # Add vertical spacing so landing content sits near center
         try:
             self.gridLayout_2.setContentsMargins(0, 120, 0, 120)
         except Exception:
             pass
-        # Place title and auth button directly on the landing page (no container)
         self.label = QtWidgets.QLabel(self.page_landing)
         font = QtGui.QFont()
         font.setPointSize(30)
@@ -270,7 +267,6 @@ class Ui_MainWindow(object):
         self.lbl_admin_title.setObjectName("lbl_admin_title")
         self.horizontalLayout_2.addWidget(self.lbl_admin_title)
         self.btn_logout = QtWidgets.QPushButton(self.header_frame)
-        # Slightly larger button text for important controls
         try:
             font_btn = QtGui.QFont()
             font_btn.setPointSize(12)
@@ -285,22 +281,18 @@ class Ui_MainWindow(object):
         self.table_records = QtWidgets.QTableWidget(self.page_admin)
         self.table_records.setFocusPolicy(QtCore.Qt.NoFocus)
         self.table_records.setAlternatingRowColors(True)
-        # Select entire rows (not individual cells) and allow single-row selection
         self.table_records.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table_records.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.table_records.setShowGrid(False)
         self.table_records.setObjectName("table_records")
         self.table_records.setColumnCount(9)
         self.table_records.setRowCount(0)
-        # Hide vertical row header to match desired layout
         try:
             self.table_records.verticalHeader().setVisible(False)
         except Exception:
             pass
-        # Make columns stretch to fill available space and remove small focus outline for items
         try:
             header = self.table_records.horizontalHeader()
-            # Prefer ResizeToContents for short columns and Stretch for name/room-type so text is readable
             header.setMinimumSectionSize(50)
             header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # ID
             header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)  # Username
@@ -322,14 +314,12 @@ class Ui_MainWindow(object):
         except Exception:
             pass
         try:
-            # Increase table font and spacing for readability and remove focus outline
             self.table_records.setStyleSheet(
                 "QTableWidget { font-size: 14px; }"
                 "QHeaderView::section { background: transparent; color: #263238; font-size: 14px; padding: 8px; font-weight: 700; border-bottom: 1px solid #e6eef6; }"
                 "QTableWidget::item:focus { outline: none; } QTableWidget:focus { outline: none; }"
             )
             try:
-                # Slightly taller rows for clarity
                 self.table_records.verticalHeader().setDefaultSectionSize(30)
             except Exception:
                 pass
@@ -354,7 +344,6 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.table_records.setHorizontalHeaderItem(8, item)
         self.table_records.horizontalHeader().setStretchLastSection(True)
-        # Add table with stretch so it expands to fill available space
         self.verticalLayout_3.addWidget(self.table_records, 1)
         self.footer_frame = QtWidgets.QFrame(self.page_admin)
         self.footer_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
@@ -493,16 +482,11 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         
-        # Stub data for bookings
         self.bookings = []
         self.next_id = 1
-        # Current user (simple placeholder). Replace with real auth when integrated.
         self.current_user = { 'username': 'guest' }
         
-        # Connect signals
         self.connect_signals()
-        
-        # Start on landing page
         self.ui.stackedWidget.setCurrentIndex(0)
 
     def connect_signals(self):
@@ -526,7 +510,7 @@ class MainWindow(QMainWindow):
     def show_login_dialog(self):
         """Placeholder for login (TODO: integrate auth)"""
         print("Login clicked - TODO: show login dialog")
-        self.ui.stackedWidget.setCurrentIndex(1)  # Go to booking for demo
+        self.ui.stackedWidget.setCurrentIndex(1)  
 
     def show_register_dialog(self):
         """Placeholder for register"""
@@ -538,7 +522,6 @@ class MainWindow(QMainWindow):
 
     def confirm_booking(self):
         """Handle booking confirmation"""
-        # Get form data
         name = self.ui.input_name.text()
         phone = self.ui.input_phone.text()
         email = self.ui.input_email.text()
@@ -552,8 +535,6 @@ class MainWindow(QMainWindow):
         if not name or not phone or not room_type:
             print("Please fill required fields")
             return
-
-        # Calculate nights and price
         nights = (self.ui.date_checkout.date() - self.ui.date_checkin.date()).days()
         if "Standard" in room_type:
             price_per_night = 100
@@ -581,7 +562,7 @@ class MainWindow(QMainWindow):
 
         print(f"Booking confirmed: {booking}")
         self.clear_booking_form()
-        self.ui.stackedWidget.setCurrentIndex(2)  # Show admin to see booking
+        self.ui.stackedWidget.setCurrentIndex(2) 
         self.load_records()
 
     def clear_booking_form(self):
@@ -625,14 +606,12 @@ class MainWindow(QMainWindow):
         row = selection[0].row()
         booking_id = int(self.ui.table_records.item(row, 0).text())
         
-        # Confirmation dialog
         reply = QMessageBox.question(self, 'Confirm Delete', 
                                    f'Delete booking ID {booking_id}?\nThis cannot be undone.',
                                    QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
         
-        # DB delete using standard config
         try:
             conn = pymysql.connect(
                 host='localhost', user='root', password='', 
@@ -644,7 +623,6 @@ class MainWindow(QMainWindow):
             conn.close()
             
             if deleted > 0:
-                # Remove from local memory & refresh table
                 self.bookings = [b for b in self.bookings if b["id"] != booking_id]
                 self.load_records()
                 print(f"Deleted booking {booking_id} from DB")

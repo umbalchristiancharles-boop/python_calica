@@ -7,7 +7,7 @@ import pymysql.cursors
 from migrate_users_to_db import DB_CONFIG
 
 USERS_FILE = 'users.json'
-BAD_WORDS = {'bad', 'inappropriate', 'spam'}  # Extend as needed
+BAD_WORDS = {'bad', 'inappropriate', 'spam'}  
 
 class AuthHandler:
     def __init__(self, users_file: str = USERS_FILE):
@@ -15,7 +15,7 @@ class AuthHandler:
         self.users: List[Dict] = self.load_users()
     
     def load_users(self) -> List[Dict]:
-        # Prefer authoritative source: try DB first and sync to users.json
+        
         try:
             conn = pymysql.connect(**DB_CONFIG)
             cursor = conn.cursor(pymysql.cursors.DictCursor)
@@ -33,7 +33,7 @@ class AuthHandler:
                     'name': r.get('name') or '',
                     'phone': r.get('phone') or ''
                 })
-            # Ensure there's at least one admin user; if not, add default admin and attempt DB insert
+           
             has_admin = any((u.get('role') or '').lower() == 'admin' or (u.get('username') or '').lower() == 'admin' for u in users)
             if not has_admin:
                 default_admin = {
@@ -46,7 +46,6 @@ class AuthHandler:
                 }
                 users.insert(0, default_admin)
                 try:
-                    # Try to insert default admin to DB so next load finds it
                     conn2 = pymysql.connect(**DB_CONFIG)
                     cur2 = conn2.cursor(pymysql.cursors.DictCursor)
                     cur2.execute("SELECT id FROM users WHERE username = %s OR email = %s", (default_admin['username'], default_admin['email']))
@@ -63,23 +62,20 @@ class AuthHandler:
 
             if users:
                 try:
-                    # Keep local file in sync so app behaviour remains consistent offline
                     self.save_users(users)
                 except Exception:
                     pass
                 return users
         except Exception:
-            # DB not available or query failed — fall back to local file below
             pass
 
-        # Local fallback: ensure file exists and contains at least built-in admin
         if not os.path.exists(self.users_file):
             default_users = {
                 'users': [
                     {
                         'username': 'admin',
                         'email': 'admin@hotel.com',
-                        'password': 'Admin@123',  # Same as DB for consistency
+                        'password': 'Admin@123',  
                         'role': 'admin',
                         'name': 'Hotel Admin',
                         'phone': '09000000000'
@@ -130,7 +126,7 @@ class AuthHandler:
         phone = re.sub(r'[^\d]', '', phone)
         if len(phone) > 11 or not phone:
             return False, 'Phone: 1-11 digits only'
-        return True, phone  # Returns cleaned phone
+        return True, phone  
     
     def validate_password(self, password: str) -> Tuple[bool, str]:
         if len(password) < 6:
@@ -153,22 +149,19 @@ class AuthHandler:
         ok_pw, err = self.validate_password(password)
         if not ok_pw: return False, err
         
-        # Save as customer
         user = {
             'username': username,
             'email': email,
-            'password': password,  # TODO: hash in prod
+            'password': password,  # TODO: 
             'role': 'customer',
             'name': name,
             'phone': cleaned_phone
         }
         self.users.append(user)
         self.save_users(self.users)
-        # Try to insert into DB immediately; fail quietly but log
         try:
             conn = pymysql.connect(**DB_CONFIG)
             cursor = conn.cursor(pymysql.cursors.DictCursor)
-            # check existing by username or email
             cursor.execute("SELECT id FROM users WHERE username = %s OR email = %s", (username, email))
             row = cursor.fetchone()
             if row:
@@ -193,7 +186,6 @@ class AuthHandler:
             user_username = (user.get('username') or '').strip().lower()
             user_email = (user.get('email') or '').strip().lower()
             user_password = user.get('password') or ''
-            # Match by username (case-insensitive) or email (case-insensitive)
             if (username_norm == user_username or username_norm == user_email) and password == user_password:
                 return user
         return None
@@ -210,11 +202,9 @@ class AuthHandler:
         if not identifier:
             return False, 'Empty identifier'
 
-        # Prevent deleting the built-in admin by username or admin email
         if identifier.lower() == 'admin' or identifier.lower() == 'admin@hotel.com':
             return False, 'Refusing to delete built-in admin'
 
-        # Try to delete from DB first (authoritative source)
         try:
             conn = pymysql.connect(**DB_CONFIG)
             cursor = conn.cursor(pymysql.cursors.DictCursor)
@@ -228,7 +218,6 @@ class AuthHandler:
                     print(f"DB delete failed (delete_user): {e}")
                 finally:
                     conn.close()
-                # Reload authoritative list from DB and sync local file
                 try:
                     self.users = self.load_users()
                 except Exception:
@@ -236,10 +225,8 @@ class AuthHandler:
                 return True, f"User {row.get('username')} deleted (DB)"
             conn.close()
         except Exception:
-            # DB unavailable — fall back to local-file deletion
             pass
 
-        # Local fallback removal from users.json
         found = None
         for u in list(self.users):
             if u.get('username') == identifier or u.get('email') == identifier:
