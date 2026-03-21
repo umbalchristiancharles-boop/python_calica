@@ -44,7 +44,7 @@ class Ui_MainWindow(object):
         layout.addWidget(title)
         
         # Place the Login/Register button directly on the landing background
-        self.pushButton_auth = QtWidgets.QPushButton("🔐 Login / Register")
+        self.pushButton_auth = QtWidgets.QPushButton("Login / Register")
         self.pushButton_auth.setObjectName("pushButton_auth")
         self.pushButton_auth.setProperty('class', 'primary')
         self.pushButton_auth.setFont(QtGui.QFont("Segoe UI", 14))
@@ -140,7 +140,7 @@ class Ui_MainWindow(object):
         tab_login_layout.setContentsMargins(30, 30, 30, 30)
         
         QtWidgets.QLabel("Username:").setObjectName("label_login_user")
-        self.input_login_user = QtWidgets.QLineEdit(placeholderText="Username (e.g. admin)")
+        self.input_login_user = QtWidgets.QLineEdit(placeholderText="Username (e.g. user)")
         self.input_login_user.setObjectName("input_login_user")
         self.input_login_user.setClearButtonEnabled(True)
         tab_login_layout.addWidget(self.input_login_user)
@@ -148,7 +148,7 @@ class Ui_MainWindow(object):
         QtWidgets.QLabel("Password:").setObjectName("label_login_pw")
         self.input_login_pw = QtWidgets.QLineEdit()
         self.input_login_pw.setEchoMode(QtWidgets.QLineEdit.Password)
-        self.input_login_pw.setPlaceholderText("Password (e.g. Admin@123)")
+        self.input_login_pw.setPlaceholderText("Password (e.g. User@123)")
         self.input_login_pw.setObjectName("input_login_pw")
         self.input_login_pw.setClearButtonEnabled(True)
         tab_login_layout.addWidget(self.input_login_pw)

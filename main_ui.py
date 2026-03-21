@@ -1,7 +1,8 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PyQt5.QtCore import QDate
+import pymysql
 
 
 class Ui_MainWindow(object):
@@ -282,7 +283,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.btn_logout)
         self.verticalLayout_3.addWidget(self.header_frame)
         self.table_records = QtWidgets.QTableWidget(self.page_admin)
-        self.table_records = QtWidgets.QTableWidget(self.page_admin)
         self.table_records.setFocusPolicy(QtCore.Qt.NoFocus)
         self.table_records.setAlternatingRowColors(True)
         # Select entire rows (not individual cells) and allow single-row selection
@@ -304,20 +304,21 @@ class Ui_MainWindow(object):
             header.setMinimumSectionSize(50)
             header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # ID
             header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)  # Username
-            header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)          # Guest Name (main stretch)
-            header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)          # Room Type (also stretches)
-            header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents) # Guests
-            header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents) # Check-in
-            header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents) # Nights
-            header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents) # Status
-            header.setSectionResizeMode(8, QtWidgets.QHeaderView.ResizeToContents) # Total Bill
+            header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)           # Guest Name
+            header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)           # Room Type
+            header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)  # Guests
+            header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)  # Check-in
+            header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)  # Nights
+            header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)  # Status
+            header.setSectionResizeMode(8, QtWidgets.QHeaderView.Stretch)           # Total Bill
             header.setStretchLastSection(False)
         except Exception:
             pass
         try:
             sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             self.table_records.setSizePolicy(sizePolicy)
-            self.table_records.setMinimumWidth(0)
+            self.table_records.setMinimumHeight(400)
+            self.table_records.setMinimumWidth(800)
         except Exception:
             pass
         try:
@@ -478,6 +479,15 @@ class Ui_MainWindow(object):
         self.btn_refresh.setText(_translate("MainWindow", "Refresh"))
         self.btn_delete.setText(_translate("MainWindow", "Delete"))
 class MainWindow(QMainWindow):
+    def resizeEvent(self, event):
+        try:
+            if hasattr(self.ui, 'table_records'):
+                self.ui.table_records.resizeColumnsToContents()
+                self.ui.table_records.resizeRowsToContents()
+        except:
+            pass
+        super().resizeEvent(event)
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
@@ -603,14 +613,45 @@ class MainWindow(QMainWindow):
             self.ui.table_records.setItem(row, 8, QtWidgets.QTableWidgetItem(booking["total"]))
 
     def delete_record(self):
-        """Delete selected record"""
+        """Delete selected booking from DB with confirmation"""
+        from PyQt5.QtWidgets import QMessageBox
+        import pymysql
+        
         selection = self.ui.table_records.selectedItems()
-        if selection:
-            row = selection[0].row()
-            booking_id = int(self.ui.table_records.item(row, 0).text())
-            self.bookings = [b for b in self.bookings if b["id"] != booking_id]
-            self.ui.table_records.removeRow(row)
-            print(f"Deleted booking {booking_id}")
+        if not selection:
+            print("No booking selected")
+            return
+        
+        row = selection[0].row()
+        booking_id = int(self.ui.table_records.item(row, 0).text())
+        
+        # Confirmation dialog
+        reply = QMessageBox.question(self, 'Confirm Delete', 
+                                   f'Delete booking ID {booking_id}?\nThis cannot be undone.',
+                                   QMessageBox.Yes | QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+        
+        # DB delete using standard config
+        try:
+            conn = pymysql.connect(
+                host='localhost', user='root', password='', 
+                db='hotel_db', charset='utf8mb4', autocommit=True
+            )
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
+            deleted = cursor.rowcount
+            conn.close()
+            
+            if deleted > 0:
+                # Remove from local memory & refresh table
+                self.bookings = [b for b in self.bookings if b["id"] != booking_id]
+                self.load_records()
+                print(f"Deleted booking {booking_id} from DB")
+            else:
+                print(f"No booking found with ID {booking_id}")
+        except Exception as e:
+            print(f"DB delete error: {e}")
 
     def filter_records(self):
         """Filter table by search"""

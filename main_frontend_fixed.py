@@ -105,7 +105,7 @@ class FrontendApp(HotelUI):
             (self.ui.btn_logout_admin.clicked, self.logout),
             (self.ui.input_search_admin.textChanged, self.on_search_changed),
             (self.ui.btn_refresh_admin.clicked, self.refresh_table),
-            (self.ui.btn_delete_admin.clicked, self.delete_user_prompt),
+            (self.ui.btn_delete_admin.clicked, self.cancel_selected_booking),
             (self.ui.btn_rebook.clicked, self.rebook_selected),
             (self.ui.btn_rebook_admin.clicked, self.rebook_selected),
             (self.ui.btn_login.clicked, self.handle_login),
@@ -492,7 +492,7 @@ class FrontendApp(HotelUI):
         finally:
             conn_check.close()
 
-        if current_status in ('Cancelled', 'Cancellation Requested', 'Cancellation Approved'):
+        if current_status in ('Cancelled', 'Cancellation Approved'):
             return QMessageBox.warning(self, "Already Processed", f"Booking {booking_id} has status '{current_status}' and cannot be cancelled again.")
 
         reply = QMessageBox.question(self, 'Confirm Cancel', f'Cancel booking ID {booking_id}?\nThis will mark it as Cancelled.',
@@ -523,16 +523,14 @@ class FrontendApp(HotelUI):
                             self.refresh_table()
                             QMessageBox.information(self, "Requested", f"Cancellation requested for booking {booking_id}. Awaiting admin approval.")
                         else:
-                            # Admin can cancel immediately
+                            # Admin: remove booking from DB so it disappears from lists
                             try:
-                                cursor.execute("UPDATE bookings SET status = 'Cancelled', cancellation_reason = %s WHERE id = %s", (reason, booking_id))
-                            except pymysql.err.InternalError as ie:
-                                if ie.args and ie.args[0] == 1054:
-                                    cursor.execute("UPDATE bookings SET status = 'Cancelled' WHERE id = %s", (booking_id,))
-                                else:
-                                    raise
+                                cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
+                            except Exception as e:
+                                QMessageBox.critical(self, "DB Error", f"Failed to delete booking: {e}")
+                                return
                             self.refresh_table()
-                            QMessageBox.information(self, "Cancelled", f"Booking {booking_id} cancelled.\nReason: {reason[:50]}...")
+                            QMessageBox.information(self, "Deleted", f"Booking {booking_id} deleted.")
                     except Exception as e:
                         QMessageBox.critical(self, "Error", f"Cancel failed: {e}")
                     finally:
@@ -618,14 +616,15 @@ class FrontendApp(HotelUI):
             finally:
                 conn.close()
 
-            # Admin view: enable approve button only when a cancellation request is selected
+            # Admin view: enable admin action buttons based on status
             if is_admin:
                 try:
-                    # Default disable admin action buttons
+                    admin_blocked = ['Cancelled', 'Cancellation Approved', 'Checked-in', 'Checked-out']
+                    can_admin_delete = status not in admin_blocked
                     if getattr(self.ui, 'btn_delete_admin', None):
-                        self.ui.btn_delete_admin.setEnabled(False)
+                        self.ui.btn_delete_admin.setEnabled(bool(can_admin_delete))
                     if getattr(self.ui, 'btn_rebook_admin', None):
-                        self.ui.btn_rebook_admin.setEnabled(False)
+                        self.ui.btn_rebook_admin.setEnabled(bool(can_admin_delete))
                 except Exception:
                     pass
                 return
@@ -838,7 +837,7 @@ class FrontendApp(HotelUI):
                     # Reveal admin user-management action
                     try:
                         if getattr(self.ui, 'btn_delete_admin', None):
-                            self.ui.btn_delete_admin.setText('Delete User')
+                            self.ui.btn_delete_admin.setText('Delete Booking')
                             self.ui.btn_delete_admin.show()
                     except Exception:
                         pass
