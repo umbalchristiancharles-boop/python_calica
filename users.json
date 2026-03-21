@@ -15,6 +15,14 @@
       "role": "customer",
       "name": "Mark Julius",
       "phone": "09081515313"
+    },
+    {
+      "username": "marky",
+      "email": "marky@test.com",
+      "password": "Mark@123",
+      "role": "customer",
+      "name": "Mark Calica",
+      "phone": "09071616414"
     }
   ]
 }

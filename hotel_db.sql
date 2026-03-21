@@ -85,9 +85,10 @@ END//
 DELIMITER ;
 
 -- Sample data migration for existing bookings
-INSERT INTO `bookings` (`user_id`, `room_type_id`, `name`, `phone`, `email`, `room_type`, `checkin`, `checkout`, `nights`, `guests`, `payment`, `requests`, `status`, `total_bill`) VALUES
-(1, 1, 'Charles Umbal', '09071616515', 'charles@test.com', 'Standard - $100', '2026-04-02', '2026-04-06', 4, 4, 'Cash at Check-in', 'none', 'Confirmed', 1600.00),
-(1, 1, 'Gab', '09071413515', 'gab@test.com', 'Standard - $100', '2026-04-20', '2026-04-23', 3, 10, 'Credit Card', 'ywuwu', 'Confirmed', 3000.00);
+-- Sample bookings (note: app now stores `room_type_id` instead of raw `room_type` string)
+INSERT INTO `bookings` (`user_id`, `room_type_id`, `name`, `phone`, `email`, `checkin`, `checkout`, `nights`, `guests`, `payment`, `requests`, `status`, `total_bill`) VALUES
+(1, 1, 'Charles Umbal', '09071616515', 'charles@test.com', '2026-04-02', '2026-04-06', 4, 4, 'Cash at Check-in', 'none', 'Confirmed', 1600.00),
+(1, 1, 'Gab', '09071413515', 'gab@test.com', '2026-04-20', '2026-04-23', 3, 10, 'Credit Card', 'ywuwu', 'Confirmed', 3000.00);
 
 -- View for app compatibility (old room_type string)
 CREATE VIEW `bookings_view` AS

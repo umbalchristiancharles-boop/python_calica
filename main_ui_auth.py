@@ -37,7 +37,7 @@ class Ui_MainWindow(object):
         layout.setAlignment(QtCore.Qt.AlignCenter)
         
         title = QtWidgets.QLabel()
-        title.setText("🏨 Welcome to Hotel Reservation System")
+        title.setText("Welcome to Hotel Reservation System")
         title.setFont(QtGui.QFont("Segoe UI", 28, QtGui.QFont.Bold))
         title.setStyleSheet("color: #2c3e50; margin: 40px; padding: 20px;")
         title.setAlignment(QtCore.Qt.AlignCenter)

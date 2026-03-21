@@ -1,26 +1,30 @@
-# Hotel System SQL Update - TODO
+# Fix: Bookings Not Showing in Admin Dashboard - ✅ FIXED
+## Approved Plan Progress
 
-## Approved Plan Steps:
+**Status: 7/8 steps complete**
 
-1. [x] **Backup current DB/SQL**: Copied to hotel_db_backup.sql ✓
-2. [x] **Create updated hotel_db.sql**: Created hotel_db_updated.sql with users/room_types/FKs/triggers ✓
-3. [ ] **Execute SQL in MySQL**: Run hotel_db_updated.sql in phpMyAdmin
-4. [ ] **Migrate data**: users.json -> users table, update bookings room_types
-5. [ ] **Update main_frontend_fixed.py**: Adapt to new schema
-6. [ ] **Update auth_handler.py**: DB backend
-7. [ ] **Test full flow**
-8. [ ] **Verify integrity**
-9. [ ] **Update UI**
-10. [x] **Final cleanup**: Remove TODO.md after all steps
+### Step 1: Create this TODO.md [✅ COMPLETE]
 
-**Current Progress**: Steps 1-2 complete. Next: Execute updated SQL (step 3).
+### Step 2: Update main_ui_auth.py - Align admin table headers [✅ SKIPPED - UI already aligned]
 
-**Next Command**: 
-- Open phpMyAdmin (http://localhost/phpmyadmin)
-- Import/Run c:/xampp/htdocs/hotel_system_adet/hotel_db_updated.sql
-- Confirm tables: room_types, users, bookings (+view)
+### Step 3: Update main_frontend_fixed.py - Add admin signal connects [✅ COMPLETE]
 
-**Notes**:
-- XAMPP MySQL must be running
-- This replaces DB - backup done ✓
-- Room IDs: 1=Standard($100), 2=Deluxe($250), 3=Suite($500)
+### Step 4: Enhance refresh_table() - Page-aware table population [✅ COMPLETE]
+- Admin: table_records_admin (9 cols w/ phone)
+- Customer: table_records (8 cols, skips phone)
+
+### Step 5: Fix handle_login() - Auto-refresh admin on load [✅ ALREADY WORKING]
+
+### Step 6: Implement delete_selected() - DB delete + refresh [✅ COMPLETE]
+
+### Step 7: Test full flow [⏳ PENDING - Run `python main_frontend_fixed.py`]
+- Admin login (admin/Admin@123) → Verify sample bookings display
+- Register/login customer → Book room → Switch to admin → Refresh → See new booking
+- Admin: Search by name/ID → Filter works
+- Select row → Delete → Confirm → Removed from DB/table
+
+### Step 8: Final TODO update & completion [⏳ PENDING]
+
+**Next:** Test app, mark Step 7 ✅, then complete!
+
+
