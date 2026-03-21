@@ -1,6 +1,6 @@
--- Updated Hotel Database Schema v2.0
--- Generated for Hotel Reservation System
--- Run this in phpMyAdmin after backing up existing DB
+-- Enhanced Hotel Database Schema v2.1 - Cancel/Rebook Support
+-- Generated for Hotel Reservation System  
+-- Run this in phpMyAdmin after backing up existing DB!
 
 DROP DATABASE IF EXISTS `hotel_db`;
 CREATE DATABASE `hotel_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -54,6 +54,10 @@ CREATE TABLE `bookings` (
   `payment` VARCHAR(50) DEFAULT 'Cash at Check-in',
   `requests` TEXT,
   `status` ENUM('Pending', 'Confirmed', 'Checked-in', 'Checked-out', 'Cancelled') DEFAULT 'Confirmed',
+  `cancellation_reason` TEXT NULL,
+  `rebooking_reason` TEXT NULL,
+  `rebooked_from_id` INT NULL,
+  FOREIGN KEY (`rebooked_from_id`) REFERENCES `bookings`(`id`) ON DELETE SET NULL,
   `total_bill` DECIMAL(10,2) NOT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
@@ -84,16 +88,20 @@ BEGIN
 END//
 DELIMITER ;
 
--- Sample data migration for existing bookings
--- Sample bookings (note: app now stores `room_type_id` instead of raw `room_type` string)
-INSERT INTO `bookings` (`user_id`, `room_type_id`, `name`, `phone`, `email`, `checkin`, `checkout`, `nights`, `guests`, `payment`, `requests`, `status`, `total_bill`) VALUES
+-- Sample data migration for existing bookings (+ cancelled sample)
+-- Sample bookings (with new fields)
+INSERT INTO `bookings` (`user_id`, `room_type_id`, `name`, `phone`, `email`, `checkin`, `checkout`, `nights`, `guests`, `payment`, `requests`, `status`, `total_bill`, `cancellation_reason`) VALUES
+(1, 1, 'Charles Umbal', '09071616515', 'charles@test.com', '2026-04-02', '2026-04-06', 4, 4, 'Cash at Check-in', 'none', 'Confirmed', 1600.00, NULL),
+(1, 1, 'Gab', '09071413515', 'gab@test.com', '2026-04-20', '2026-04-23', 3, 10, 'Credit Card', 'ywuwu', 'Confirmed', 3000.00, NULL),
+(1, 2, 'Test Customer', '09999999999', 'test@hotel.com', '2026-04-10', '2026-04-12', 2, 2, 'Credit Card', 'Early checkout requested', 'Cancelled', 1000.00, 'Guest requested refund');
 (1, 1, 'Charles Umbal', '09071616515', 'charles@test.com', '2026-04-02', '2026-04-06', 4, 4, 'Cash at Check-in', 'none', 'Confirmed', 1600.00),
 (1, 1, 'Gab', '09071413515', 'gab@test.com', '2026-04-20', '2026-04-23', 3, 10, 'Credit Card', 'ywuwu', 'Confirmed', 3000.00);
 
 -- View for app compatibility (old room_type string)
 CREATE VIEW `bookings_view` AS
 SELECT b.*, u.name AS user_name, u.username, rt.name AS room_type_name, 
-       CONCAT(rt.name, ' - $', rt.price_per_night) AS room_type_display
+       CONCAT(rt.name, ' - $', rt.price_per_night) AS room_type_display,
+       b.cancellation_reason, b.rebooking_reason
 FROM bookings b
 LEFT JOIN users u ON b.user_id = u.id
 LEFT JOIN room_types rt ON b.room_type_id = rt.id;

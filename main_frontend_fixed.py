@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QMessageBox, QTableWidge
 from PyQt5.QtCore import Qt
 import pymysql
 from datetime import date, timedelta
+import datetime
 from main_ui_auth import Ui_MainWindow
 from auth_handler import AuthHandler
 
@@ -58,14 +59,16 @@ class FrontendApp(HotelUI):
         connects = [
             (self.ui.btn_confirm.clicked, self.add_booking),
             (self.ui.btn_refresh.clicked, self.refresh_table),
-            (self.ui.btn_delete.clicked, self.delete_selected),
+(self.ui.btn_delete.clicked, self.cancel_selected_booking),
             (self.ui.input_search.textChanged, self.on_search_changed),
             (self.ui.stackedWidget.currentChanged, self.on_page_changed),
             (self.ui.btn_logout.clicked, self.logout),
 (self.ui.btn_logout_admin.clicked, self.logout),
             (self.ui.input_search_admin.textChanged, self.on_search_changed),
-            (self.ui.btn_refresh_admin.clicked, self.refresh_table),
-            (self.ui.btn_delete_admin.clicked, self.delete_selected),
+(self.ui.btn_refresh_admin.clicked, self.refresh_table),
+(self.ui.btn_delete_admin.clicked, self.cancel_selected_booking),
+            (self.ui.btn_rebook.clicked, self.rebook_selected),
+            (self.ui.btn_rebook_admin.clicked, self.rebook_selected),
             (self.ui.btn_login.clicked, self.handle_login),
             (self.ui.btn_register.clicked, self.handle_register),
             (self.ui.btn_back_auth.clicked, self.show_landing),
@@ -76,6 +79,16 @@ class FrontendApp(HotelUI):
                 signal.connect(slot)
             except AttributeError:
                 print(f"Connect skipped: {signal}")
+        # Connect selection change to update action buttons when tables exist
+        try:
+            self.ui.table_records.itemSelectionChanged.connect(self.update_action_buttons)
+        except Exception:
+            pass
+        try:
+            self.ui.table_records_admin.itemSelectionChanged.connect(self.update_action_buttons)
+        except Exception:
+            pass
+        # No client-side approve button; admin approvals handled server-side
 
     def get_db_connection(self):
         """Get PyMySQL connection."""
@@ -148,11 +161,10 @@ class FrontendApp(HotelUI):
         try:
             search = self.ui.input_search.text() if hasattr(self.ui, 'input_search') else ''
             if user_filter and user_filter.get('role') == 'customer':
-                name = user_filter.get('name', '')
-                email = user_filter.get('email', '')
-                phone = user_filter.get('phone', '')
-                base_query = "SELECT * FROM bookings WHERE (name = %s OR email = %s OR phone = %s)"
-                base_params = (name, email, phone)
+                # Filter bookings by the user's DB id to avoid exposing others' data
+                user_id = user_filter.get('id')
+                base_query = "SELECT * FROM bookings WHERE user_id = %s"
+                base_params = (user_id,)
                 if search:
                     base_query += " AND (name LIKE %s OR id LIKE %s)"
                     base_params += (f"%{search}%", f"%{search}%")
@@ -217,13 +229,43 @@ class FrontendApp(HotelUI):
                 return
 
             user_id = self.current_user.get('id') if self.current_user and 'id' in self.current_user else None
-            cursor.execute("""
-                INSERT INTO bookings (user_id, room_type_id, name, phone, email, checkin, checkout, nights, 
-                                      guests, payment, requests, total_bill)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (user_id, room_type_id, name, self.ui.input_phone.text(), self.ui.input_email.text(), 
-                  checkin.isoformat(), checkout.isoformat(), nights, guests, self.ui.combo_payment.currentText(),
-                  self.ui.txt_requests.toPlainText(), total))
+            # Handle rebook
+            if hasattr(self, 'pending_rebook'):
+                # Backend ownership check for rebook: ensure current user owns original booking (unless admin)
+                try:
+                    conn_check, cursor_check = self.get_db_connection()
+                    if conn_check:
+                        cursor_check.execute("SELECT user_id FROM bookings WHERE id = %s", (self.pending_rebook['from_id'],))
+                        orig = cursor_check.fetchone()
+                        orig_owner = orig.get('user_id') if orig else None
+                        conn_check.close()
+                        if not (self.logged_in and (self.current_user and self.current_user.get('role') == 'admin' or orig_owner == (self.current_user.get('id') if self.current_user else None))):
+                            return QMessageBox.warning(self, "Access Denied", "You are not allowed to rebook this reservation")
+                except Exception:
+                    # If ownership check cannot be completed, block for safety
+                    return QMessageBox.warning(self, "Access Denied", "Unable to validate rebook ownership")
+
+                cursor.execute("""
+                    INSERT INTO bookings (user_id, room_type_id, name, phone, email, checkin, checkout, nights, 
+                                          guests, payment, requests, total_bill, rebooked_from_id, rebooking_reason)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (user_id, room_type_id, name, self.ui.input_phone.text(), self.ui.input_email.text(), 
+                      checkin.isoformat(), checkout.isoformat(), nights, guests, self.ui.combo_payment.currentText(),
+                      self.ui.txt_requests.toPlainText(), total, self.pending_rebook['from_id'], self.pending_rebook['reason']))
+                del self.pending_rebook
+                msg = "Rebooked successfully! (linked to original)"
+            else:
+                cursor.execute("""
+                    INSERT INTO bookings (user_id, room_type_id, name, phone, email, checkin, checkout, nights, 
+                                          guests, payment, requests, total_bill)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (user_id, room_type_id, name, self.ui.input_phone.text(), self.ui.input_email.text(), 
+                      checkin.isoformat(), checkout.isoformat(), nights, guests, self.ui.combo_payment.currentText(),
+                      self.ui.txt_requests.toPlainText(), total))
+                msg = f"Booked! ID: {cursor.lastrowid}\\nTotal: ${total:,.2f}"
+            
+            id_ = cursor.lastrowid
+            QMessageBox.information(self, "Success", msg)
             
             id_ = cursor.lastrowid
             QMessageBox.information(self, "Success", f"Booked! ID: {id_}\nTotal: ${total:,.2f}")
@@ -264,17 +306,27 @@ class FrontendApp(HotelUI):
             cols.append(b.get('name', ''))
             if is_admin:
                 cols.append(b.get('phone', ''))
+            # Build a safe status display to avoid duplicate text
+            status = b.get('status', '') or ''
+            status_display = status
+            try:
+                if status == 'Cancelled' and b.get('cancellation_reason'):
+                    status_display = f"{status}\n({b.get('cancellation_reason','')[:30]}...)"
+            except Exception:
+                status_display = status
+
             cols += [b.get('room_type_display', b.get('room_type', '')),
                      str(b.get('guests', '')), str(b.get('checkin', '')),
-                     str(b.get('nights', '')), b.get('status', ''),
+                     str(b.get('nights', '')), 
+                     status_display,
                      f"${float(b.get('total_bill', 0)):.2f}"]
             for col, val in enumerate(cols):
                 table.setItem(row, col, QTableWidgetItem(str(val)))
             table.resizeColumnsToContents()
 
     # Placeholder for missing methods - expand with original full implementations
-    def delete_selected(self):
-        """Delete selected booking from DB."""
+    def cancel_selected_booking(self):
+        """Cancel selected booking (mark as Cancelled + reason)."""
         current_page = self.ui.stackedWidget.currentIndex()
         is_admin = current_page == 3
         table = self.ui.table_records_admin if is_admin else self.ui.table_records
@@ -284,23 +336,190 @@ class FrontendApp(HotelUI):
         
         row = selection[0].row()
         booking_id = int(table.item(row, 0).text())
-        reply = QMessageBox.question(self, 'Confirm Delete', f'Delete booking ID {booking_id}?',
+        reply = QMessageBox.question(self, 'Confirm Cancel', f'Cancel booking ID {booking_id}?\nThis will mark it as Cancelled.',
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
-            conn, cursor = self.get_db_connection()
-            if conn:
-                try:
-                    cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
-                    table.removeRow(row)
-                    self.refresh_table()
-                    QMessageBox.information(self, "Deleted", f"Booking {booking_id} deleted.")
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Delete failed: {e}")
-                finally:
-                    conn.close()
-            else:
-                QMessageBox.warning(self, "DB Error", "Cannot connect to database.")
+            reason, ok = QInputDialog.getText(self, 'Cancellation Reason', 'Enter reason (required):', text='')
+            if ok and reason.strip():
+                conn, cursor = self.get_db_connection()
+                if conn:
+                    try:
+                        # Security check: verify ownership on the backend before updating
+                        cursor.execute("SELECT user_id FROM bookings WHERE id = %s", (booking_id,))
+                        row = cursor.fetchone()
+                        owner_id = row.get('user_id') if row else None
+                        if not is_admin:
+                            if not self.logged_in or self.current_user is None or owner_id != self.current_user.get('id'):
+                                return QMessageBox.warning(self, "Access Denied", "You are not allowed to modify this booking")
 
+                        if not is_admin:
+                            # For customers: create a cancellation request instead of immediate cancel
+                            try:
+                                cursor.execute("UPDATE bookings SET status = 'Cancellation Requested', cancellation_reason = %s WHERE id = %s", (reason, booking_id))
+                            except pymysql.err.InternalError as ie:
+                                if ie.args and ie.args[0] == 1054:
+                                    cursor.execute("UPDATE bookings SET status = 'Cancellation Requested' WHERE id = %s", (booking_id,))
+                                else:
+                                    raise
+                            self.refresh_table()
+                            QMessageBox.information(self, "Requested", f"Cancellation requested for booking {booking_id}. Awaiting admin approval.")
+                        else:
+                            # Admin can cancel immediately
+                            try:
+                                cursor.execute("UPDATE bookings SET status = 'Cancelled', cancellation_reason = %s WHERE id = %s", (reason, booking_id))
+                            except pymysql.err.InternalError as ie:
+                                if ie.args and ie.args[0] == 1054:
+                                    cursor.execute("UPDATE bookings SET status = 'Cancelled' WHERE id = %s", (booking_id,))
+                                else:
+                                    raise
+                            self.refresh_table()
+                            QMessageBox.information(self, "Cancelled", f"Booking {booking_id} cancelled.\nReason: {reason[:50]}...")
+                    except Exception as e:
+                        QMessageBox.critical(self, "Error", f"Cancel failed: {e}")
+                    finally:
+                        conn.close()
+                else:
+                    QMessageBox.warning(self, "DB Error", "Cannot connect to database.")
+            else:
+                return QMessageBox.warning(self, "Cancelled", "No reason provided.")
+
+    def update_action_buttons(self):
+        """Enable/disable booking action buttons based on ownership and selection."""
+        try:
+            current_page = self.ui.stackedWidget.currentIndex()
+            is_admin = current_page == 3
+            table = self.ui.table_records_admin if is_admin else self.ui.table_records
+            selected = table.selectedItems()
+            # Default disable
+            for btn in [getattr(self.ui, 'btn_delete', None), getattr(self.ui, 'btn_rebook', None)]:
+                try:
+                    if btn:
+                        btn.setEnabled(False)
+                except Exception:
+                    pass
+
+            if not selected:
+                return
+
+            row = selected[0].row()
+            try:
+                booking_id = int(table.item(row, 0).text())
+            except Exception:
+                return
+
+            conn, cursor = self.get_db_connection()
+            if not conn:
+                return
+            try:
+                cursor.execute("SELECT user_id, status FROM bookings WHERE id = %s", (booking_id,))
+                row = cursor.fetchone()
+                owner_id = row.get('user_id') if row else None
+                status = row.get('status') if row else None
+            finally:
+                conn.close()
+
+            # Admin view: keep admin-only buttons disabled by default (no approve button)
+            if is_admin:
+                try:
+                    if getattr(self.ui, 'btn_delete_admin', None):
+                        self.ui.btn_delete_admin.setEnabled(False)
+                    if getattr(self.ui, 'btn_rebook_admin', None):
+                        self.ui.btn_rebook_admin.setEnabled(False)
+                except Exception:
+                    pass
+                return
+
+            # For customer view: enable only if logged in and owner
+            is_owner = self.logged_in and self.current_user and owner_id == self.current_user.get('id')
+            try:
+                if getattr(self.ui, 'btn_delete', None):
+                    self.ui.btn_delete.setEnabled(is_owner)
+                if getattr(self.ui, 'btn_rebook', None):
+                    self.ui.btn_rebook.setEnabled(is_owner)
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    def rebook_selected(self):
+        current_page = self.ui.stackedWidget.currentIndex()
+        is_admin = current_page == 3
+        table = self.ui.table_records_admin if is_admin else self.ui.table_records
+        selection = table.selectedItems()
+        if not selection:
+            return QMessageBox.warning(self, "No Selection", "Select booking row first.")
+        
+        row = selection[0].row()
+        booking_id = int(table.item(row, 0).text())
+        
+        conn, cursor = self.get_db_connection()
+        if not conn:
+            return
+        cursor.execute("SELECT * FROM bookings WHERE id = %s", (booking_id,))
+        booking = cursor.fetchone()
+        conn.close()
+        
+        if not booking:
+            return QMessageBox.warning(self, "Error", "Booking not found.")
+        
+        # Validation
+        if self.logged_in and self.current_user.get('role') == 'customer' and booking['user_id'] != self.current_user.get('id'):
+            return QMessageBox.warning(self, "Access Denied", "Only your own bookings.")
+        
+        reply = QMessageBox.question(self, 'Rebook?', f'Rebook ID {booking_id}?\nDates: {booking["checkin"]} - {booking["checkout"]}',
+                                     QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            reason, ok = QInputDialog.getText(self, 'Rebooking Reason', 'Reason (required):')
+            if ok and reason.strip():
+                # Prefill form
+                self.ui.input_name.setText(booking['name'])
+                if hasattr(self.ui, 'input_phone'):
+                    self.ui.input_phone.setText(booking['phone'] or '')
+                if hasattr(self.ui, 'input_email'):
+                    self.ui.input_email.setText(booking['email'] or '')
+                self.ui.spin_guests.setValue(booking.get('guests') or 1)
+                # Robust parsing of booking date fields (they may be str, date, or datetime)
+                def _parse_booking_date(val):
+                    if isinstance(val, str):
+                        try:
+                            return date.fromisoformat(val)
+                        except Exception:
+                            pass
+                    if isinstance(val, date):
+                        return val
+                    try:
+                        if isinstance(val, datetime.datetime):
+                            return val.date()
+                    except Exception:
+                        pass
+                    try:
+                        return date.fromisoformat(str(val))
+                    except Exception:
+                        return date.today()
+
+                checkin_dt = _parse_booking_date(booking.get('checkin'))
+                checkout_dt = _parse_booking_date(booking.get('checkout'))
+                try:
+                    self.ui.date_checkin.setDate(checkin_dt)
+                    self.ui.date_checkout.setDate(checkout_dt)
+                except Exception:
+                    # If setDate fails, silently continue — user can still edit dates
+                    pass
+                
+                self.pending_rebook = {'from_id': booking_id, 'reason': reason}
+                # Switch to booking form so user can adjust and confirm the rebook
+                try:
+                    self.ui.stackedWidget.setCurrentIndex(2)
+                except Exception:
+                    pass
+                QMessageBox.information(self, "Prefilled", "Form prefilled with old data. Update dates/room and confirm to rebook.")
+            else:
+                QMessageBox.warning(self, "Rebook Cancelled", "Reason required.")
+
+    def approve_selected_cancellation(self):
+        # Approve action removed from UI. Server-side approval remains.
+        QMessageBox.information(self, "Not Available", "Approve Cancellation action has been removed from the UI.")
+    
     def on_search_changed(self, text):
         """Search change - page aware."""
         self.refresh_table()
@@ -336,6 +555,11 @@ class FrontendApp(HotelUI):
                 else:
                     self.ui.stackedWidget.setCurrentIndex(2)
                     self.populate_customer_info()
+                # Ensure action buttons reflect ownership state
+                try:
+                    self.update_action_buttons()
+                except Exception:
+                    pass
                 QMessageBox.information(self, "Welcome", f"Hi, {user['name']}! ({user['role'].title()})")
             else:
                 self.ui.input_login_user.clear()
@@ -424,6 +648,10 @@ class FrontendApp(HotelUI):
             self.logged_in = False
             self.current_user = None
             self.show_landing()
+            try:
+                self.update_action_buttons()
+            except Exception:
+                pass
 
     def on_page_changed(self, idx: int):
         """Page change security."""

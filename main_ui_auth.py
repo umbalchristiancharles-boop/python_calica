@@ -290,9 +290,26 @@ class Ui_MainWindow(object):
         self.table_records.setObjectName("table_records")
         table_layout.addWidget(self.table_records)
         
-        self.btn_delete = QtWidgets.QPushButton("🗑️ Delete Selected")
+        self.btn_delete = QtWidgets.QPushButton("❌ Cancel Selected")
         self.btn_delete.setObjectName("btn_delete")
         table_layout.addWidget(self.btn_delete)
+        
+        self.btn_rebook = QtWidgets.QPushButton("🔄 Rebook Selected")
+        self.btn_rebook.setObjectName("btn_rebook")
+        self.btn_rebook.setStyleSheet("""
+            QPushButton#btn_rebook {
+                background-color: #f39c12;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton#btn_rebook:hover {
+                background-color: #e67e22;
+            }
+        """)
+        table_layout.addWidget(self.btn_rebook)
         
         self.btn_logout = QtWidgets.QPushButton("Logout")
         self.btn_logout.setObjectName("btn_logout")
@@ -329,10 +346,41 @@ class Ui_MainWindow(object):
         layout.addWidget(self.table_records_admin)
         
         btn_layout = QtWidgets.QHBoxLayout()
-        self.btn_delete_admin = QtWidgets.QPushButton("Delete Selected")
+        self.btn_delete_admin = QtWidgets.QPushButton("❌ Cancel Selected")
         btn_layout.addWidget(self.btn_delete_admin)
+        # Hide admin cancel button per request (keep attribute for backend logic)
+        try:
+            self.btn_delete_admin.hide()
+        except Exception:
+            pass
+
+        # (Approve button removed) admin approval handled server-side; keep UI minimal
+        
+        self.btn_rebook_admin = QtWidgets.QPushButton("🔄 Rebook Selected")
+        self.btn_rebook_admin.setObjectName("btn_rebook_admin")
+        self.btn_rebook_admin.setStyleSheet("""
+            QPushButton#btn_rebook_admin {
+                background-color: #f39c12;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton#btn_rebook_admin:hover {
+                background-color: #e67e22;
+            }
+        """)
+        btn_layout.addWidget(self.btn_rebook_admin)
+        # Hide admin rebook button per request (keep attribute for backend logic)
+        try:
+            self.btn_rebook_admin.hide()
+        except Exception:
+            pass
+        
         self.btn_logout_admin = QtWidgets.QPushButton("Logout")
         btn_layout.addWidget(self.btn_logout_admin)
+        # UI buttons sized consistently
         layout.addLayout(btn_layout)
         
         self.stackedWidget.addWidget(self.page_admin)
